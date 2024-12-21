@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     "job_listing_api.apps.JobApiConfig",
     "job.apps.JobConfig",
     "knowledge_base_api.apps.KnowledgeBaseApiConfig",
-    "tracking"
+    "tracking",
     # For social auth
     "oauth2_provider",
     "social_django",

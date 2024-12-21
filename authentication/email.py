@@ -25,7 +25,7 @@ class EmailOTP:
         signed_token = signing.dumps(
             obj=(self.code, self.user_id), key=settings.SECRET_KEY
         )
-        verification_url = f"{settings.CURRENT_ORIGIN}/api/v1/authentication/email-verify/{signed_token}"
+        verification_url = f"{settings.CURRENT_ORIGIN}/api/v1/authentication/verify-email/{signed_token}"
         html_message = f"""
             <html>
                 <body>
