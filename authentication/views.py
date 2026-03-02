@@ -41,7 +41,7 @@ class RegisterView(APIView):
             new_user_data = serializer.save()
             response_data = self.serializer_class(new_user_data).data
             return Response({"data": response_data}, status=status.HTTP_201_CREATED)
-
+            
 
 class VerifyEmailBeginView(APIView):
     """

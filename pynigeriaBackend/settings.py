@@ -13,6 +13,7 @@ else:
     print("No env file detected.")
     exit(code=5000)
 
+AUTH_USER_MODEL = 'authentication.User'  # should point to your custom user model
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY_VALUE", default="default")
 
@@ -186,17 +187,29 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Email settings
-CURRENT_ORIGIN = os.getenv("CURRENT_ORIGIN_VALUE")
+CURRENT_ORIGIN = "localhost:8000" 
 SENDER_EMAIL = os.getenv("SENDER_EMAIL_VALUE")
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND_VALUE")
-EMAIL_HOST = os.getenv("EMAIL_HOST_VALUE")
-EMAIL_PORT = os.getenv("EMAIL_PORT_VALUE")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = os.getenv("EMAIL_PORT")
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER_VALUE")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD_VALUE")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = "Python9ja <pytho9ja.mail.com>"
 
 # 2FA TOTP settings
 OTP_TOTP_ISSUER = "pynigeria"
 TAGGIT_CASE_INSENSITIVE = True
-CORS_ALLOW_ALL_ORIGINS = True
 
+# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # your frontend URL
+]
+
+# Allow cookies/credentials to be sent
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False

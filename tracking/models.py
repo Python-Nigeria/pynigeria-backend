@@ -10,16 +10,18 @@ class UserActivity(models.Model):
 	whatsapp_number = models.IntegerField(null=True,blank=True)
 	status = models.BooleanField(default=True)
 
-    def __init__(self):
-        return f"{self.user} Activity"
+	def __init__(self):
+		return f"{self.user} Activity"
+
+
 
 
 class Message(models.Model):
-    user = models.ForeignKey(
-        UserActivity, on_delete=models.CASCADE, related_name="messages"
-    )
-    title = models.CharField(max_length=10000, default="This Month")
-    total_message = models.IntegerField(default=0)
+	user = models.ForeignKey(
+			UserActivity, on_delete=models.CASCADE, related_name="messages"
+	)
+	title = models.CharField(max_length=10000, default="This Month")
+	total_message = models.IntegerField(default=0)
 
-    def __init__(self):
-        return f"{self.user.user} Messages"
+	def __init__(self):
+		return f"{self.user.user} Messages"
