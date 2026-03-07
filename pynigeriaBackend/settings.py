@@ -5,13 +5,13 @@ from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 env_file = BASE_DIR / ".env"
+
 if env_file.exists():
     load_dotenv(env_file, override=True)
 else:
-    print("No env file detected.")
-    exit(code=5000)
+    print("No .env file found, using system environment variables.")
+
 
 AUTH_USER_MODEL = 'authentication.User'  # should point to your custom user model
 # SECURITY WARNING: keep the secret key used in production secret!
