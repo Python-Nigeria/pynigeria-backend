@@ -187,7 +187,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Email settings
-CURRENT_ORIGIN = "localhost:8000" 
+CURRENT_ORIGIN = "http://localhost:3000" 
 SENDER_EMAIL = os.getenv("SENDER_EMAIL_VALUE")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"

@@ -2,15 +2,16 @@ from io import BytesIO
 
 import qrcode
 from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.shortcuts import redirect
+from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import BaseRenderer, BrowsableAPIRenderer
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 from social_core.actions import do_auth
 from social_django.utils import psa
@@ -19,15 +20,16 @@ from .serializers import (
     EmailVerifyBeginSerializer,
     EmailVerifyCompleteSerializer,
     LoginSerializer,
+    LoginTOTPSerializer,       # new — Step 2 of login
     QRCodeDataSerializer,
     RegisterSerializer,
     TOTPDeviceCreateSerializer,
     VerifyTOTPDeviceSerializer,
 )
 from .social_authentication import complete_social_authentication
-from django.middleware.csrf import get_token
-from rest_framework.permissions import AllowAny
 
+
+# ─── Registration ─────────────────────────────────────────────────────────────
 
 class RegisterView(APIView):
     serializer_class = RegisterSerializer
@@ -38,16 +40,17 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            new_user_data = serializer.save()
-            response_data = self.serializer_class(new_user_data).data
-            return Response({"data": response_data}, status=status.HTTP_201_CREATED)
-            
+            user = serializer.save()
+            return Response(
+                {"data": self.serializer_class(user).data},
+                status=status.HTTP_201_CREATED,
+            )
+
+
+# ─── Email Verification ───────────────────────────────────────────────────────
 
 class VerifyEmailBeginView(APIView):
-    """
-    This view exists to initiate email verification manually if the auto option fails.
-    """
-
+    """Resend verification email if the original link was missed or expired."""
     serializer_class = EmailVerifyBeginSerializer
     throttle_classes = [AnonRateThrottle]
     permission_classes = [AllowAny]
@@ -56,9 +59,11 @@ class VerifyEmailBeginView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            user_data = serializer.save()
-            response_data = self.serializer_class(user_data).data
-            return Response({"data": response_data}, status=status.HTTP_200_OK)
+            result = serializer.save()
+            return Response(
+                {"data": self.serializer_class(result).data},
+                status=status.HTTP_200_OK,
+            )
 
 
 class VerifyEmailCompleteView(APIView):
@@ -70,29 +75,84 @@ class VerifyEmailCompleteView(APIView):
     def post(self, request, token):
         serializer = self.serializer_class(data={}, context={"token": token})
         if serializer.is_valid(raise_exception=True):
-            user_data = serializer.save()
-            response_data = self.serializer_class(user_data).data
-            return Response({"data": response_data}, status=status.HTTP_200_OK)
+            user = serializer.save()
+            return Response(
+                {"data": self.serializer_class(user).data},
+                status=status.HTTP_200_OK,
+            )
 
 
-class TOTPDeviceCreateView(APIView):
-    serializer_class = TOTPDeviceCreateSerializer
+# ─── Login ────────────────────────────────────────────────────────────────────
+
+class LoginView(APIView):
+    """
+    Step 1 — validates email + password.
+    Returns tokens immediately if 2FA is off.
+    Returns { requires_2fa: true, email } if 2FA is on, so the frontend
+    knows to show the TOTP prompt and call LoginTOTPView next.
+    """
+    serializer_class = LoginSerializer
     throttle_classes = [AnonRateThrottle]
     permission_classes = [AllowAny]
 
-    @extend_schema(operation_id="v1_create_totp_device", tags=["auth_v1"])
+    @extend_schema(operation_id="v1_login", tags=["auth_v1"])
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            device_data = serializer.save()
-            response_data = self.serializer_class(device_data).data
-            return Response({"data": response_data}, status=status.HTTP_201_CREATED)
+            result = serializer.save()
+            return Response({"data": result}, status=status.HTTP_200_OK)
+
+
+class LoginTOTPView(APIView):
+    """
+    Step 2 — only called when LoginView returned requires_2fa=True.
+    Accepts the 6-digit TOTP code and returns tokens if valid.
+    """
+    serializer_class = LoginTOTPSerializer
+    throttle_classes = [AnonRateThrottle]
+    permission_classes = [AllowAny]
+
+    @extend_schema(operation_id="v1_login_totp", tags=["auth_v1"])
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            result = serializer.save()
+            return Response({"data": result}, status=status.HTTP_200_OK)
+
+
+# ─── Optional 2FA Setup (authenticated users only) ───────────────────────────
+
+class TOTPDeviceCreateView(APIView):
+    """
+    Creates an unconfirmed TOTP device for the logged-in user.
+    Requires authentication — 2FA setup lives in settings, not during signup.
+    """
+    serializer_class = TOTPDeviceCreateSerializer
+    throttle_classes = [UserRateThrottle]     # authenticated throttle, not anon
+    permission_classes = [IsAuthenticated]    # must be logged in
+
+    @extend_schema(operation_id="v1_create_totp_device", tags=["auth_v1"])
+    def post(self, request):
+        # Pass request in context so the serializer can get request.user
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
+        if serializer.is_valid(raise_exception=True):
+            device = serializer.save()
+            return Response(
+                {"data": self.serializer_class(device, context={"request": request}).data},
+                status=status.HTTP_201_CREATED,
+            )
 
 
 class GetQRCodeView(APIView):
+    """
+    Returns a PNG QR code image for the user's unconfirmed TOTP device.
+    Requires authentication.
+    """
     serializer_class = QRCodeDataSerializer
-    throttle_classes = [AnonRateThrottle]
-    permission_classes = [AllowAny]
+    throttle_classes = [UserRateThrottle]
+    permission_classes = [IsAuthenticated]
 
     class PNGRenderer(BaseRenderer):
         media_type = "image/png"
@@ -105,7 +165,9 @@ class GetQRCodeView(APIView):
 
     @extend_schema(operation_id="v1_get_qrcode", tags=["auth_v1"])
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
         if serializer.is_valid(raise_exception=True):
             otpauth_url = serializer.save()
             qr = qrcode.QRCode(
@@ -116,7 +178,6 @@ class GetQRCodeView(APIView):
             )
             qr.add_data(otpauth_url)
             qr.make(fit=True)
-
             img = qr.make_image(fill_color=(0, 0, 0), back_color=(255, 255, 255))
             image_buffer = BytesIO()
             img.save(image_buffer)
@@ -128,11 +189,6 @@ class GetQRCodeView(APIView):
             )
 
     def finalize_response(self, request, response, *args, **kwargs):
-        """
-        This method defines renderers for both image and text.
-        PNGRenderer is used when the response contains the QR code.
-        BrowsableAPIRenderer is in case of error messages, compatible with DRF's browsable API.
-        """
         if response.content_type == "image/png":
             response.accepted_renderer = GetQRCodeView.PNGRenderer()
             response.accepted_media_type = GetQRCodeView.PNGRenderer.media_type
@@ -151,39 +207,33 @@ class GetQRCodeView(APIView):
 
 
 class VerifyTOTPDeviceView(APIView):
+    """
+    Confirms the TOTP device after the user scans the QR and enters their first code.
+    Requires authentication.
+    """
     serializer_class = VerifyTOTPDeviceSerializer
-    throttle_classes = [AnonRateThrottle]
-    permission_classes = [AllowAny]
+    throttle_classes = [UserRateThrottle]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(operation_id="v1_verify_totp_device", tags=["auth_v1"])
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
         if serializer.is_valid(raise_exception=True):
-            device_data = serializer.save()
-            response_data = self.serializer_class(device_data).data
-            return Response({"data": response_data}, status=status.HTTP_200_OK)
-
-class LoginView(APIView):
-    serializer_class = LoginSerializer
-    throttle_classes = [AnonRateThrottle]
-    permission_classes = [AllowAny]
-
-    @extend_schema(operation_id="v1_login", tags=["auth_v1"])
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid(raise_exception=True):
+            device = serializer.save()
             return Response(
-                {"data": serializer.validated_data},
-                status=status.HTTP_200_OK
+                {"data": self.serializer_class(device, context={"request": request}).data},
+                status=status.HTTP_200_OK,
             )
 
+
+# ─── Social Auth ──────────────────────────────────────────────────────────────
 
 @method_decorator(
     [csrf_exempt, never_cache, psa("authentication:social-complete")], name="get"
 )
 class SocialAuthenticationBeginView(APIView):
-    """This view initiates social oauth authentication"""
-
     throttle_classes = [AnonRateThrottle]
     permission_classes = [AllowAny]
 
@@ -201,8 +251,6 @@ class SocialAuthenticationBeginView(APIView):
     [csrf_exempt, never_cache, psa("authentication:social-complete")], name="get"
 )
 class SocialAuthenticationCompleteView(APIView):
-    """This view completes social oauth authentication"""
-
     throttle_classes = [AnonRateThrottle]
     permission_classes = [AllowAny]
 
@@ -215,9 +263,12 @@ class SocialAuthenticationCompleteView(APIView):
     def get(self, request, backend):
         return complete_social_authentication(request, backend)
 
+
+# ─── CSRF ─────────────────────────────────────────────────────────────────────
+
 class CsrfTokenView(APIView):
     permission_classes = [AllowAny]
-    def get(self,request):
-        #Genrate and get CSRF token
-        csrf_token = get_token(request)
-        return Response(dict(csrfToken=csrf_token))
+
+    @extend_schema(operation_id="v1_csrf_token", tags=["auth_v1"])
+    def get(self, request):
+        return Response({"csrfToken": get_token(request)})

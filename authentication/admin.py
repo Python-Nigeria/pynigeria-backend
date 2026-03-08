@@ -12,7 +12,7 @@ class UserAdmin(ModelAdmin):
         "is_2fa_enabled",
         "is_superuser",
         "is_staff",
-        "is_otp_email_sent",
+        # "is_otp_email_sent",
         "created",
         "updated",
         "last_login",

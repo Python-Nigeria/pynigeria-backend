@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core import signing
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from pyotp import TOTP, random_base32
 
 from .models import OTPCode
@@ -8,48 +8,184 @@ from .models import OTPCode
 
 class EmailOTP:
     """
-    This handles generation of OTP codes for email verification and sending of verification links to new users.
-    The 'send_email' method is called through a signal when a new user object is saved.
+    Generates a signed OTP verification link and sends it to the user's email.
+    Called manually from serializers — not via signal — since we need
+    to control exactly when the email fires (e.g. on resend, on expiry).
     """
 
     def __init__(self, user):
         self.user = user
-        self.code = None
         self.user_id = user.id
         self.user_email = user.email
-        self.generate_otp()
-
-    def generate_otp(self):
         self.code = TOTP(random_base32(), digits=6).now()
 
     def send_email(self):
         signed_token = signing.dumps(
-            obj=(self.code, self.user_id), key=settings.SECRET_KEY
+            obj=(self.code, self.user_id),
+            key=settings.SECRET_KEY,
         )
-        verification_url = f"{settings.CURRENT_ORIGIN}/api/v1/authentication/verify-email/complete/{signed_token}/"
-        html_message = f"""
-            <html>
-                <body>
-                    <p>
-                        Click this link to verify your email:<br>
-                        <a href='{verification_url}'>verification link</a>
-                    </p>
-                </body>
-            </html>
-        """
-        subject = "Email Verification"
+
+        # This should point to your frontend verify page, not the API endpoint
+        # The frontend page then calls the API with the token
+        verification_url = (
+            f"{settings.CURRENT_ORIGIN}/account/verify/{signed_token}/"
+        )
+
+        subject = "Verify your Python 9ja email"
+        text_fallback = (
+            f"Hi,\n\nVerify your Python 9ja account by visiting:\n{verification_url}\n\n"
+            f"This link expires in 15 minutes.\n\nIf you didn't create this account, ignore this email."
+        )
+        html_message = self._build_html(verification_url)
+
+        # EmailMultiAlternatives sends both plain text and HTML
+        # Plain text is the fallback for email clients that don't render HTML
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_fallback,
+            from_email=f"Python 9ja <{settings.SENDER_EMAIL}>",
+            to=[self.user_email],
+        )
+        email.attach_alternative(html_message, "text/html")
+
         try:
-            mail_status = send_mail(
-                subject=subject,
-                message=html_message,
-                from_email=settings.SENDER_EMAIL,
-                recipient_list=[self.user_email],
-                html_message=html_message,
-                fail_silently=False,
-            )
-            if mail_status == 1:
-                OTPCode.objects.create(code=self.code, user=self.user)
-                self.user.is_otp_email_sent = True
-                self.user.save()
+            email.send(fail_silently=False)
+            # Only create the OTP record after the email actually sends successfully
+            # Delete any old code first to avoid unique constraint issues on resend
+            OTPCode.objects.filter(user=self.user).delete()
+            OTPCode.objects.create(code=self.code, user=self.user)
         except Exception as e:
-            raise Exception(str(e))
+            raise Exception(f"Failed to send verification email: {e}")
+
+    def _build_html(self, verification_url):
+        return f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify your email – Python 9ja</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7f6;font-family:'Segoe UI',Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f7f6;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0"
+               style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#065f46 0%,#10b981 100%);padding:36px 40px;text-align:center;">
+              <h1 style="margin:0;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">
+                🐍 Python<span style="color:#6ee7b7;">9ja</span>
+              </h1>
+              <p style="margin:8px 0 0;font-size:13px;color:#a7f3d0;letter-spacing:0.5px;">
+                Nigeria's Python Developer Community
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#111827;">
+                Welcome to Python 9ja! 🎉
+              </h2>
+              <p style="margin:0 0 16px;font-size:15px;color:#4b5563;line-height:1.7;">
+                You're one step away from joining <strong>2,400+ Python developers</strong>
+                across Nigeria. Verify your email to unlock your full account.
+              </p>
+              <p style="margin:0 0 28px;font-size:15px;color:#4b5563;line-height:1.7;">
+                Once verified, you'll get access to:
+              </p>
+
+              <!-- Feature list -->
+              <table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:32px;">
+                {"".join(f'''
+                <tr>
+                  <td style="padding:6px 0;">
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="font-size:16px;padding-right:10px;">{icon}</td>
+                        <td style="font-size:14px;color:#374151;">{text}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>''' for icon, text in [
+                    ("💼", "120+ Python job listings updated weekly"),
+                    ("📰", "Curated Nigerian tech news every week"),
+                    ("🤝", "Project collaborations &amp; mentorship"),
+                    ("💬", "Community forums &amp; developer discussions"),
+                ])}
+              </table>
+
+              <!-- CTA Button -->
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="{verification_url}"
+                       style="display:inline-block;background:linear-gradient(135deg,#059669,#10b981);
+                              color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;
+                              padding:14px 36px;border-radius:10px;letter-spacing:0.3px;">
+                      ✅ Verify My Email
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Expiry notice -->
+              <p style="margin:24px 0 0;font-size:13px;color:#9ca3af;text-align:center;line-height:1.6;">
+                ⏱ This link expires in <strong>15 minutes</strong>.
+                If it expires, you can request a new one from the sign-in page.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Fallback URL -->
+          <tr>
+            <td style="padding:0 40px 24px;">
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;">
+                <p style="margin:0 0 6px;font-size:12px;color:#6b7280;font-weight:600;">
+                  Button not working? Copy and paste this link:
+                </p>
+                <p style="margin:0;font-size:11px;color:#059669;word-break:break-all;">
+                  {verification_url}
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Security notice -->
+          <tr>
+            <td style="padding:0 40px 32px;">
+              <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
+                🔒 If you didn't create a Python 9ja account, you can safely ignore this email.
+                Someone may have entered your email address by mistake.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#9ca3af;">
+                © {settings.CURRENT_YEAR if hasattr(settings, 'CURRENT_YEAR') else '2025'} Python 9ja · Made with ❤️ in Nigeria 🇳🇬
+              </p>
+              <p style="margin:6px 0 0;font-size:12px;color:#9ca3af;">
+                You're receiving this because you signed up at
+                <a href="{settings.CURRENT_ORIGIN}" style="color:#059669;text-decoration:none;">
+                  python9ja.com
+                </a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
+"""
