@@ -2,11 +2,9 @@ asgiref==3.8.1
 attrs==24.2.0
 black==24.10.0
 certifi==2024.8.30
-cffi==1.17.1
 charset-normalizer==3.4.0
 click==8.1.7
 colorama==0.4.6
-cryptography==44.0.0
 defusedxml==0.8.0rc2
 Django==5.1.4
 django-cors-headers==4.6.0
@@ -42,10 +40,13 @@ PyYAML==6.0.2
 qrcode==8.0
 referencing==0.35.1
 requests==2.32.3
+requests-oauthlib==2.0.0
+rpds-py==0.22.3
+social-auth-app-django==5.4.2
+social-auth-core==4.5.4
 sqlparse==0.5.2
 typing_extensions==4.12.2
 tzdata==2024.2
 uritemplate==4.1.1
 urllib3==2.2.3
 whitenoise==6.8.2
-

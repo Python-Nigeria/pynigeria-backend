@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "drf_spectacular",  # for openapi/swagger documentation
-    "drf_spectacular_sidecar",
+   # "drf_spectacular_sidecar",
     "django_otp",  # for 2FA
     "django_otp.plugins.otp_totp",
     "django_filters",
@@ -192,10 +192,11 @@ SENDER_EMAIL = os.getenv("SENDER_EMAIL_VALUE")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = os.getenv("EMAIL_PORT")
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = "Python9ja <pytho9ja.mail.com>"
+DEFAULT_FROM_EMAIL = "Python9jaDEV@gmail.com"
 
 # 2FA TOTP settings
 OTP_TOTP_ISSUER = "pynigeria"
@@ -213,3 +214,11 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
+
+AUTHENTICATION_BACKENDS = (
+    "social_core.backends.google.GoogleOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")

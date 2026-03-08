@@ -257,6 +257,7 @@ class LoginSerializer(Serializer):
 
     def validate(self, data):
         self.email = data.get("email")
+        print("lets go")
         user = User.objects.filter(email=self.email).first()
         if not user:
             raise ValidationError(
@@ -269,6 +270,7 @@ class LoginSerializer(Serializer):
             .filter(user__email=self.email, confirmed=True)
             .first()
         )
+        
         if not self.device:
             raise ValidationError(
                 detail={

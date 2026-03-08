@@ -163,7 +163,6 @@ class VerifyTOTPDeviceView(APIView):
             response_data = self.serializer_class(device_data).data
             return Response({"data": response_data}, status=status.HTTP_200_OK)
 
-
 class LoginView(APIView):
     serializer_class = LoginSerializer
     throttle_classes = [AnonRateThrottle]
@@ -173,9 +172,10 @@ class LoginView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            user_data = serializer.save()
-            response_data = self.serializer_class(user_data).data
-            return Response({"data": response_data}, status=status.HTTP_200_OK)
+            return Response(
+                {"data": serializer.validated_data},
+                status=status.HTTP_200_OK
+            )
 
 
 @method_decorator(
