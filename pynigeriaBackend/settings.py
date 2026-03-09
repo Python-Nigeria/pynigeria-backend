@@ -30,7 +30,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS_VALUE", "127.0.0.1").split(",")  # Use 
 
 # SECURITY WARNING: don't run with debug turned on in production!
 CSRF_COOKIE_SAMESITE = 'None'
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000',"https://pynigeria.vercel.app/"]
 CSRF_COOKIE_HTTPONLY = False
 DEBUG = True
 
@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "drf_spectacular",  # for openapi/swagger documentation
-   # "drf_spectacular_sidecar",
+    "drf_spectacular_sidecar",
     "django_otp",  # for 2FA
     "django_otp.plugins.otp_totp",
     "django_filters",
@@ -187,7 +187,8 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Email settings
-CURRENT_ORIGIN = "http://localhost:3000" 
+#CURRENT_ORIGIN = "http://localhost:3000" 
+CURRENT_ORIGIN = "https://pynigeria.vercel.app/"
 SENDER_EMAIL = os.getenv("SENDER_EMAIL_VALUE")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
