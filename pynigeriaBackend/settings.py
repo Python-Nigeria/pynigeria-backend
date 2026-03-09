@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "drf_spectacular",  # for openapi/swagger documentation
-    "drf_spectacular_sidecar",
+   # "drf_spectacular_sidecar",
     "django_otp",  # for 2FA
     "django_otp.plugins.otp_totp",
     "django_filters",

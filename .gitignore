@@ -340,7 +340,6 @@ venv/
 .env
 __pycache__/
 *.pyc
-migrations/
 db.sqlite3
 staticfiles/
 a.md
