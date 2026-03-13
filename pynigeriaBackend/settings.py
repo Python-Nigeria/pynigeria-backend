@@ -223,3 +223,44 @@ AUTHENTICATION_BACKENDS = (
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
+
+# Logging
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": "pynigeriaBackend.log_formatters.JsonFormatter",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "rich.logging.RichHandler",
+            "rich_tracebacks": True,
+            "show_time": True,
+            "show_path": False,
+            "markup": True,
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "json",
+            "filename": str(LOG_DIR / "app.log"),
+            "maxBytes": 10485760,  # 10 MB
+            "backupCount": 5,
+        },
+    },
+    "loggers": {
+        "authentication": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
+        "job_listing_api": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
+        "knowledge_base_api": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
+        "django.request": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
+        "django.security": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
+}
