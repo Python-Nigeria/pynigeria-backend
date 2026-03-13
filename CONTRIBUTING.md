@@ -46,16 +46,14 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 ## Development Setup
 
-1. **Create and activate a virtual environment:**
+1. **Install uv** (if not already installed):
    ```bash
-   python -m venv venv
-   source venv/bin/activate   # Linux/Mac
-   venv\Scripts\activate      # Windows
+   pip install uv
    ```
 
-2. **Install dependencies:**
+2. **Install dependencies** (uv will create a virtual environment automatically):
    ```bash
-   pip install -r requirements.txt
+   uv sync
    ```
 
 3. **Copy the example env file and fill in your values:**
@@ -65,17 +63,17 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 4. **Apply migrations:**
    ```bash
-   python manage.py migrate
+   uv run python manage.py migrate
    ```
 
 5. **Run the development server:**
    ```bash
-   python manage.py runserver
+   uv run python manage.py runserver
    ```
 
 6. **Run tests to confirm everything works:**
    ```bash
-   python manage.py test
+   uv run python manage.py test
    ```
 
 ---
@@ -129,11 +127,11 @@ docs(contributing): add branch naming conventions
 1. Ensure your branch is up to date with `main` before opening a PR.
 2. Make sure all tests pass:
    ```bash
-   python manage.py test
+   uv run python manage.py test
    ```
 3. Ensure your code is formatted with Black:
    ```bash
-   black .
+   uv run black .
    ```
 4. Fill out the pull request template completely.
 5. Link the relevant issue using `Closes #<issue-number>` in your PR description.
