@@ -10,4 +10,4 @@ BE-8,Setup Redis Broker,Deploy Redis instance used by Celery.,team/backend-cloud
 BE-9,Configure Media Storage,Setup avatar and resume storage service.,team/backend-cloud;phase/2-community,Phase 2 — Community
 BE-10,Implement Jobs Model,"Create Job model with company,title,location,salary fields.",team/backend-cloud;phase/3-jobs,Phase 3 — Jobs
 BE-11,Implement Job Applications API,Create job application endpoint and tracking.,team/backend-cloud;phase/3-jobs,Phase 3 — Jobs
-BE-12,Implement Notifications Worker,Background worker sending email notifications.,team/backend-cloud;phase/5-growth,Phase 5 — Growth
+BE-12,Implement Notifications Worker,Background worker sending email notifications.,team/backend-cloud;phase/5-growth,Phase 5 — Growths
