@@ -1,49 +1,46 @@
-name: CSV to Issues (Idempotent)
+- name: Process CSV files
+  env:
+    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  run: |
+    for file in .github/data/*.csv; do
+      echo "Processing $file"
 
-on:
-  push:
-    paths:
-      - '.github/data/**/*.csv'
+      tail -n +2 "$file" | while IFS=, read -r id title body labels milestone
+      do
+        echo "Checking $id"
 
-jobs:
-  create-issues:
-    runs-on: ubuntu-latest
+        # Check if issue already exists (by ID in title)
+        existing=$(gh issue list \
+          --search "$id in:title" \
+          --json title \
+          -q '.[].title')
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+        if [[ "$existing" == *"$id"* ]]; then
+          echo "Skipping existing issue: $id"
+        else
+          echo "Creating issue: $id"
 
-      - name: Install GitHub CLI
-        run: sudo apt-get install gh -y
+          # Prepare labels (comma-separated)
+          label_list=$(echo $labels | tr ';' ',')
 
-      - name: Process CSV files
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for file in .github/data/*.csv; do
-            echo "Processing $file"
-
-            tail -n +2 "$file" | while IFS=, read -r id title body labels milestone
-            do
-              echo "Checking $id"
-
-              # Check if issue already exists (by ID in title)
-              existing=$(gh issue list \
-                --search "$id in:title" \
-                --json title \
-                -q '.[].title')
-
-              if [[ "$existing" == *"$id"* ]]; then
-                echo "Skipping existing issue: $id"
-              else
-                echo "Creating issue: $id"
-
-                gh issue create \
-                  --title "$id $title" \
-                  --body "$body" \
-                  --label "$(echo $labels | tr ';' ',')" \
-                  --milestone "$milestone"
-              fi
-
-            done
+          # Ensure each label exists
+          IFS=',' read -ra arr <<< "$label_list"
+          for lbl in "${arr[@]}"; do
+            lbl_trim=$(echo "$lbl" | xargs)  # trim spaces
+            exists=$(gh label list --json name -q ".[] | select(.name==\"$lbl_trim\") | .name")
+            if [ -z "$exists" ]; then
+              echo "Creating missing label: $lbl_trim"
+              gh label create "$lbl_trim" --color "f29513"
+            fi
           done
+
+          # Create the issue
+          gh issue create \
+            --title "$id $title" \
+            --body "$body" \
+            --label "$label_list" \
+            --milestone "$milestone"
+        fi
+
+      done
+    done
