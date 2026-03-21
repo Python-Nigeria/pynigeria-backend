@@ -1,0 +1,6 @@
+id,Title,Description,Labels,Milestone
+BE-RV-1,Define PR Template,Create pull request template.,team/review,Phase 1 — Foundation
+BE-RV-2,Define Issue Template,Create GitHub issue template.,team/review,Phase 1 — Foundation
+BE-RV-3,Setup Lint Checks,Ensure Python and JS lint checks run in CI.,team/review,Phase 1 — Foundation
+BE-RV-4,Code Quality Review Guidelines,Define contributor coding standards.,team/review,Phase 1 — Foundation
+BE-RV-5,Architecture Consistency Review,Ensure new features follow project architecture.,team/review,Phase 2 — Community

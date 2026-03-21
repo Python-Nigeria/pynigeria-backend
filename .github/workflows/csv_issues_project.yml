@@ -1,0 +1,49 @@
+name: CSV to Issues (Idempotent)
+
+on:
+  push:
+    paths:
+      - '.github/data/**/*.csv'
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        run: sudo apt-get install gh -y
+
+      - name: Process CSV files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for file in .github/data/*.csv; do
+            echo "Processing $file"
+
+            tail -n +2 "$file" | while IFS=, read -r id title body labels milestone
+            do
+              echo "Checking $id"
+
+              # Check if issue already exists (by ID in title)
+              existing=$(gh issue list \
+                --search "$id in:title" \
+                --json title \
+                -q '.[].title')
+
+              if [[ "$existing" == *"$id"* ]]; then
+                echo "Skipping existing issue: $id"
+              else
+                echo "Creating issue: $id"
+
+                gh issue create \
+                  --title "$id $title" \
+                  --body "$body" \
+                  --label "$(echo $labels | tr ';' ',')" \
+                  --milestone "$milestone"
+              fi
+
+            done
+          done

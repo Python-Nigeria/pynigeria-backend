@@ -1,0 +1,6 @@
+id,Title,Description,Labels,Milestone
+BE-SC-1,Audit Authentication Flow,Review login and register endpoints.,team/security,Phase 1 — Foundation
+BE-SC-2,Implement Rate Limiting,Protect login and register endpoints.,team/security,Phase 1 — Foundation
+BE-SC-3,Validate File Uploads,Restrict avatar and resume upload types.,team/security,Phase 2 — Community
+BE-SC-4,Review OAuth Security,Ensure GitHub OAuth is implemented safely.,team/security,Phase 1 — Foundation
+BE-SC-5,Implement API Abuse Protection,Rate limit job applications.,team/security,Phase 3 — Jobs
