@@ -50,8 +50,15 @@ jobs:
                     echo "Creating missing label: $lbl_trim"
                     gh label create "$lbl_trim" --color "f29513"
                   fi
-                done
 
+                # Check if milestone exists
+                milestone_exists=$(gh milestone list --json title -q ".[] | select(.title==\"$milestone\") | .title")
+                if [ -z "$milestone_exists" ]; then
+                  echo "Creating missing milestone: $milestone"
+                  gh milestone create "$milestone"
+                fi
+
+                done
                 # Create the issue
                 gh issue create \
                   --title "$id $title" \
