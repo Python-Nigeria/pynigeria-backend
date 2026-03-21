@@ -1,0 +1,165 @@
+#publish existing issues
+name: CSV to Issues v1 (Idempotent)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/data/**/*.csv'
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Process CSV files
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 << 'EOF'
+          import csv
+          import subprocess
+          import glob
+          import os
+          import json
+
+          repo = os.environ["REPO"]
+          PROJECT_NUMBER = 1
+
+          def gh(*args):
+              result = subprocess.run(["gh"] + list(args), capture_output=True, text=True)
+              if result.returncode != 0:
+                  raise RuntimeError(f"gh {' '.join(args)} failed:\n{result.stderr}")
+              return result.stdout.strip()
+
+          def gh_api(path, method="GET", fields=None):
+              args = ["api", f"repos/{repo}/{path}"]
+              if method != "GET":
+                  args += ["--method", method]
+              if fields:
+                  for k, v in fields.items():
+                      args += ["-f", f"{k}={v}"]
+              args += ["-q", "."]
+              result = subprocess.run(["gh"] + args, capture_output=True, text=True)
+              if result.returncode != 0:
+                  raise RuntimeError(f"API {method} {path} failed:\n{result.stderr}")
+              return json.loads(result.stdout)
+
+          def get_project_id(project_number):
+              owner = repo.split("/")[0]
+              query = f"""
+              query {{
+                organization(login: "{owner}") {{
+                  projectV2(number: {project_number}) {{
+                    id
+                  }}
+                }}
+              }}
+              """
+              result = subprocess.run(
+                  ["gh", "api", "graphql", "-f", f"query={query}"],
+                  capture_output=True, text=True
+              )
+              data = json.loads(result.stdout)
+              try:
+                  return data["data"]["organization"]["projectV2"]["id"]
+              except (KeyError, TypeError):
+                  query = f"""
+                  query {{
+                    user(login: "{owner}") {{
+                      projectV2(number: {project_number}) {{
+                        id
+                      }}
+                    }}
+                  }}
+                  """
+                  result = subprocess.run(
+                      ["gh", "api", "graphql", "-f", f"query={query}"],
+                      capture_output=True, text=True
+                  )
+                  data = json.loads(result.stdout)
+                  return data["data"]["user"]["projectV2"]["id"]
+
+          def add_issue_to_project(project_id, issue_node_id):
+              mutation = f"""
+              mutation {{
+                addProjectV2ItemById(input: {{
+                  projectId: "{project_id}"
+                  contentId: "{issue_node_id}"
+                }}) {{
+                  item {{ id }}
+                }}
+              }}
+              """
+              subprocess.run(
+                  ["gh", "api", "graphql", "-f", f"query={mutation}"],
+                  capture_output=True, text=True
+              )
+
+          def ensure_label(name):
+              existing = gh("label", "list", "--json", "name", "-q", f'.[] | select(.name=="{name}") | .name')
+              if not existing:
+                  print(f"  Creating label: {name}")
+                  gh("label", "create", name, "--color", "f29513")
+
+          def ensure_milestone(title):
+              milestones = gh_api("milestones")
+              for m in milestones:
+                  if m["title"] == title:
+                      return str(m["number"])
+              print(f"  Creating milestone: {title}")
+              created = gh_api("milestones", method="POST", fields={"title": title})
+              return str(created["number"])
+
+          def get_issue_node_id(issue_id):
+              out = gh("issue", "list", "--search", f"{issue_id} in:title",
+                      "--json", "title,id", "-q",
+                      f'.[] | select(.title | startswith("{issue_id}")) | .id')
+              return out.strip() or None
+
+          project_id = get_project_id(PROJECT_NUMBER)
+          print(f"Project ID: {project_id}")
+
+          for filepath in sorted(glob.glob(".github/data/*.csv")):
+              print(f"\nProcessing {filepath}")
+              with open(filepath, newline="", encoding="utf-8") as f:
+                  reader = csv.DictReader(f)
+                  for row in reader:
+                      issue_id   = row["id"].strip()
+                      title      = row["Title"].strip()
+                      body       = row["Description"].strip()
+                      labels_raw = row["Labels"].strip()
+                      milestone  = row["Milestone"].strip()
+
+                      print(f"Checking {issue_id}")
+
+                      node_id = get_issue_node_id(issue_id)
+                      if node_id:
+                          print(f"  Already exists, adding to project: {issue_id}")
+                          add_issue_to_project(project_id, node_id)
+                          continue
+
+                      labels = [l.strip() for l in labels_raw.split(";") if l.strip()]
+                      for lbl in labels:
+                          ensure_label(lbl)
+
+                      ensure_milestone(milestone)
+
+                      print(f"  Creating: {issue_id} {title}")
+                      cmd = [
+                          "issue", "create",
+                          "--title", f"{issue_id} {title}",
+                          "--body", body,
+                          "--milestone", milestone,
+                          "--json", "id,number,nodeId",
+                          "-q", ".id"
+                      ]
+                      for lbl in labels:
+                          cmd += ["--label", lbl]
+                      node_id = gh(*cmd)
+
+                      print(f"  Adding to project: {issue_id}")
+                      add_issue_to_project(project_id, node_id)
+
+          EOF
