@@ -52,11 +52,11 @@ jobs:
                   fi
                 done
 
-                # Check if milestone exists
-                milestone_exists=$(gh milestone list --json title -q ".[] | select(.title==\"$milestone\") | .title")
+                # Ensure milestone exists
+                milestone_exists=$(gh issue milestone list --json title -q ".[] | select(.title==\"$milestone\") | .title")
                 if [ -z "$milestone_exists" ]; then
                   echo "Creating missing milestone: $milestone"
-                  gh milestone create "$milestone"
+                  gh issue milestone create "$milestone"
                 fi
 
                 # Create the issue
