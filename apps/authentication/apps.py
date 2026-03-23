@@ -1,10 +1,9 @@
 from django.apps import AppConfig
 
 
-class JobApiConfig(AppConfig):
+class AuthenticationConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "job_listing_api"
-    verbose_name = "Job Listing"
+    name = "apps.authentication"
 
-    def ready(self) -> None:
+    def ready(self):
         from . import signals

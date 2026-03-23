@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class TrackingConfig(AppConfig):
+class KnowledgeBaseApiConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "tracking"
+    name = "apps.knowledge_base_api"

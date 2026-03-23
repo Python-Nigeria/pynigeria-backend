@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from job_listing_api.views import (
+from .views import (
     BookmarkFolderViewset,
     BookmarkViewset,
     JobApproveView,
