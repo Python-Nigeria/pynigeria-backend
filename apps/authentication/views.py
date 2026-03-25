@@ -28,7 +28,6 @@ from .serializers import (
 )
 from .social_authentication import complete_social_authentication
 
-
 # ─── Registration ─────────────────────────────────────────────────────────────
 
 
