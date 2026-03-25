@@ -1,6 +1,6 @@
 from django.contrib.admin import ModelAdmin, register
 
-from .models import OTPCode, User
+from .models import OTPVerification, User
 
 
 @register(User)
@@ -12,7 +12,6 @@ class UserAdmin(ModelAdmin):
         "is_2fa_enabled",
         "is_superuser",
         "is_staff",
-        # "is_otp_email_sent",
         "created",
         "updated",
         "last_login",
@@ -31,7 +30,7 @@ class UserAdmin(ModelAdmin):
     ]
 
 
-@register(OTPCode)
-class OTPCodeAdmin(ModelAdmin):
-    list_display = ["code", "user", "expiry"]
-    list_filter = ["user", "expiry"]
+@register(OTPVerification)
+class OTPVerificationAdmin(ModelAdmin):
+    list_display = ["otp", "user", "created_at", "is_used"]
+    list_filter = ["user", "created_at", "is_used"]

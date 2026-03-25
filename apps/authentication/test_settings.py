@@ -1,7 +1,7 @@
 from config.settings.development import *
 
 REST_FRAMEWORK = {
-    "REST_FRAMEWORK_THROTTLE_CLASSES": [
+    "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ],

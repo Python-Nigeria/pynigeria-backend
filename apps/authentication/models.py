@@ -9,8 +9,8 @@ from django.db.models import (
     CharField,
     DateTimeField,
     EmailField,
+    ForeignKey,
     Model,
-    OneToOneField,
 )
 from django.utils import timezone
 from nanoid import generate
@@ -110,31 +110,24 @@ class User(AbstractBaseUser, PermissionsMixin):
         )
 
 
-class OTPCode(Model):
+class OTPVerification(Model):
     """
     Short-lived 6-digit code sent to the user's email.
     Used for: email verification on signup, and as the 2FA step if user has no TOTP device.
     """
 
-    code = CharField(
-        max_length=6, db_index=True
-    )  # No unique=True — two users can get same digits
-    user = OneToOneField(User, related_name="otp", on_delete=CASCADE)
-    expiry = DateTimeField(db_index=True)
+    user = ForeignKey(User, related_name="otps", on_delete=CASCADE)
+    otp = CharField(max_length=6, db_index=True)
+    created_at = DateTimeField(auto_now_add=True)
+    is_used = BooleanField(default=False)
 
     class Meta:
-        db_table = "user_otp_code"
-        ordering = ["-expiry"]
+        db_table = "user_otp_verification"
+        ordering = ["-created_at"]
 
-    def save(self, *args, **kwargs):
-        # Recalculate expiry fresh on every new code — avoids the frozen-at-import-time bug
-        if not self.pk:
-            self.expiry = timezone.now() + timezone.timedelta(minutes=10)
-        super().save(*args, **kwargs)
-
-    @property
     def is_expired(self):
-        return timezone.now() > self.expiry
+        expiry = self.created_at + timezone.timedelta(minutes=10)
+        return timezone.now() > expiry
 
     def __str__(self):
         return f"{self.user.email}'s OTP code"

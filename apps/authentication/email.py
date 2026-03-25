@@ -1,9 +1,10 @@
+import random
+from config.settings.development import *
 from django.conf import settings
-from django.core import signing
 from django.core.mail import EmailMultiAlternatives
-from pyotp import TOTP, random_base32
+from django.core import signing
 
-from .models import OTPCode
+from .models import OTPVerification
 
 
 class EmailOTP:
@@ -15,41 +16,47 @@ class EmailOTP:
 
     def __init__(self, user, context="signup"):
         self.user = user
-        self.user_id = user.id
+        self.user_id = str(user.id)
         self.user_email = user.email
         self.context = context
-        self.code = TOTP(random_base32(), digits=6).now()
+        self.code = str(random.randint(100000, 999999))
 
-    def send_email(self):
-        signed_token = signing.dumps(
+        # Signed token for magic links (remains for signup/convenience)
+        self.signed_token = signing.dumps(
             obj=(self.code, self.user_id),
             key=settings.SECRET_KEY,
         )
 
         # This should point to your frontend verify page, not the API endpoint
-        # The frontend page then calls the API with the token
-        verification_url = f"{settings.CURRENT_ORIGIN}/account/verify/{signed_token}/"
+        origin = settings.CURRENT_ORIGIN.rstrip("/")
+        self.verification_url = f"{origin}/account/verify/{self.signed_token}"
 
         if self.context == "login":
-            subject = "Login Verification Code"
+            self.subject = "Your Python 9ja login code"
+        else:
+            self.subject = "Verify your email – Python 9ja"
+
+    def send_email(self):
+        # The frontend page then calls the API with the token
+
+        if self.context == "login":
             text_fallback = (
                 f"Hi,\n\nYour login verification code is {self.code}.\n\n"
                 f"This code expires in 10 minutes.\n\n"
                 f"If you didn't request this, ignore this email."
             )
         else:
-            subject = "Verify your Python 9ja email"
             text_fallback = (
-                f"Hi,\n\nVerify your Python 9ja account by visiting:\n{verification_url}\n\n"
+                f"Hi,\n\nVerify your Python 9ja account by visiting:\n{self.verification_url}\n\n"
                 f"This link expires in 10 minutes.\n\nIf you didn't create this account, ignore this email."
             )
 
-        html_message = self._build_html(verification_url)
+        html_message = self._build_html(self.verification_url)
 
         # EmailMultiAlternatives sends both plain text and HTML
         # Plain text is the fallback for email clients that don't render HTML
         email = EmailMultiAlternatives(
-            subject=subject,
+            subject=self.subject,
             body=text_fallback,
             from_email=f"Python 9ja <{settings.SENDER_EMAIL}>",
             to=[self.user_email],
@@ -60,8 +67,8 @@ class EmailOTP:
             email.send(fail_silently=False)
             # Only create the OTP record after the email actually sends successfully
             # Delete any old code first to avoid unique constraint issues on resend
-            OTPCode.objects.filter(user=self.user).delete()
-            OTPCode.objects.create(code=self.code, user=self.user)
+            OTPVerification.objects.filter(user=self.user, is_used=False).delete()
+            OTPVerification.objects.create(otp=self.code, user=self.user)
         except Exception as e:
             raise Exception(f"Failed to send verification email: {e}")
 
