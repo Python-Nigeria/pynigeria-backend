@@ -129,7 +129,7 @@ class OTPCode(Model):
     def save(self, *args, **kwargs):
         # Recalculate expiry fresh on every new code — avoids the frozen-at-import-time bug
         if not self.pk:
-            self.expiry = timezone.now() + timezone.timedelta(minutes=15)
+            self.expiry = timezone.now() + timezone.timedelta(minutes=10)
         super().save(*args, **kwargs)
 
     @property
