@@ -60,12 +60,12 @@ class VerifyEmailBeginView(APIView):
     @extend_schema(operation_id="v1_verify_email_begin", tags=["auth_v1"])
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            result = serializer.save()
-            return Response(
-                {"data": self.serializer_class(result).data},
-                status=status.HTTP_200_OK,
-            )
+        serializer.is_valid(raise_exception=True)
+        result = serializer.save()
+        return Response(
+            {"data": {"message": result}},
+            status=status.HTTP_200_OK,
+        )
 
 
 class VerifyEmailCompleteView(APIView):
@@ -74,12 +74,13 @@ class VerifyEmailCompleteView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(operation_id="v1_verify_email_complete", tags=["auth_v1"])
-    def post(self, request, token):
-        serializer = self.serializer_class(data={}, context={"token": token})
+    def post(self, request):
+        token = request.query_params.get("token")
+        serializer = self.serializer_class(data=request.data, context={"token": token})
         if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
+            result = serializer.save()
             return Response(
-                {"data": self.serializer_class(user).data},
+                {"data": result},
                 status=status.HTTP_200_OK,
             )
 

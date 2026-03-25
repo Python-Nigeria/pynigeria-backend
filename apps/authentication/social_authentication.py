@@ -1,14 +1,12 @@
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
+from .signals import login_otp_requested
 from social_core.utils import (
     partial_pipeline_data,
     user_is_active,
     user_is_authenticated,
 )
-
-from .serializers import UserSerializer
 
 
 def complete_social_authentication(request, backend):
@@ -40,35 +38,20 @@ def complete_social_authentication(request, backend):
 
     is_new = getattr(user, "is_new", False)
 
-    if is_new:
-        # New social login user — account just created, send them to verify email or straight to app
-        # No password or 2FA setup needed for social users
-        user_data = UserSerializer(user).data
-        user_data["message"] = "Account created. Welcome!"
-        return Response({"data": user_data}, status=status.HTTP_201_CREATED)
+    # Trigger OTP flow instead of issuing tokens directly
+    # This applies to both existing and new social users to satisfy the strict OTP requirement.
+    context = "signup" if is_new else "login"
+    login_otp_requested.send(
+        sender=complete_social_authentication, user=user, context=context
+    )
 
-    # Returning social login user — issue tokens directly
-    # Social providers (Google etc.) handle their own auth security
-    # so we don't gate on our internal 2FA flag here
-    return _issue_tokens(user)
-
-
-def _issue_tokens(user):
-    """Issue JWT access + refresh tokens for the given user."""
-    refresh_token = RefreshToken.for_user(user)
     return Response(
         {
             "data": {
-                "id": user.id,
+                "requires_email_otp": True,
                 "email": user.email,
-                "access": str(refresh_token.access_token),
-                "refresh": str(refresh_token),
-                # Tell the frontend which provider this user logged in with
-                "auth_provider": user.auth_provider,
-                # Let the frontend know if this user has opted into 2FA
-                # so it can show the right UI in settings
-                "is_2fa_enabled": user.is_2fa_enabled,
+                "message": "OTP sent to your email. Please verify to continue.",
             }
         },
-        status=status.HTTP_200_OK,
+        status=status.HTTP_200_OK if not is_new else status.HTTP_201_CREATED,
     )

@@ -22,7 +22,7 @@ urlpatterns = [
         "verify-email/begin/", VerifyEmailBeginView.as_view(), name="verify-email-begin"
     ),
     path(
-        "verify-email/complete/<str:token>/",
+        "verify-email/complete/",
         VerifyEmailCompleteView.as_view(),
         name="verify-email-complete",
     ),

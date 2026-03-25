@@ -18,8 +18,8 @@ from rest_framework.serializers import (
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .email import EmailOTP
-from .models import OTPCode, User
+from .models import OTPVerification, User
+from .signals import login_otp_requested
 
 
 class UserSerializer(ModelSerializer):
@@ -95,76 +95,112 @@ class EmailVerifyBeginSerializer(Serializer):
 
     def validate(self, data):
         email = data.get("email")
-        self.user = User.objects.select_related("otp").filter(email=email).first()
+        self.user = User.objects.prefetch_related("otps").filter(email=email).first()
         if not self.user:
             raise ValidationError(
                 detail={"error": "No existing account is associated with this email."}
             )
-        if self.user.is_email_verified:
-            raise ValidationError(
-                detail={"error": "This account has already been verified."}
-            )
         # Prevent spamming — only block if a valid unexpired OTP already exists
-        if hasattr(self.user, "otp") and not self.user.otp.is_expired:
+        last_otp = self.user.otps.first()
+        if last_otp and not last_otp.is_expired():
             raise ValidationError(
                 detail={
-                    "error": "A verification link was already sent. Check your email."
+                    "error": "A verification link/code was already sent. Check your email."
                 }
             )
         return data
 
     def save(self, **kwargs):
-        EmailOTP(self.user).send_email()
-        return "Check your email for a verification link."
+        context = "login" if self.user.is_email_verified else "signup"
+        login_otp_requested.send(sender=self.__class__, user=self.user, context=context)
+        return "Check your email for a verification code/link."
 
     def to_representation(self, instance):
         return {"message": instance}
 
 
 class EmailVerifyCompleteSerializer(Serializer):
+    email = EmailField(required=False, write_only=True)
+    otp_code = CharField(required=False, write_only=True)
     id = CharField(read_only=True)
-    email = EmailField(read_only=True)
-    is_email_verified = BooleanField(read_only=True)
+    access = CharField(read_only=True)
+    refresh = CharField(read_only=True)
     message = CharField(read_only=True)
 
     def validate(self, data):
         token = self.context.get("token")
-        try:
-            otp_data = signing.loads(token, key=settings.SECRET_KEY)
-        except signing.BadSignature:
-            raise ValidationError(detail={"error": "Invalid verification token."})
+        email = data.get("email")
+        otp_code = data.get("otp_code")
 
-        self.otp = (
-            OTPCode.objects.select_related("user")
-            .filter(code=otp_data[0], user_id=otp_data[1])
-            .first()
-        )
-        if not self.otp:
-            raise ValidationError(detail={"error": "OTP code does not exist."})
+        if token:
+            try:
+                otp_data = signing.loads(token, key=settings.SECRET_KEY)
+                otp_code_val, user_id = otp_data[0], otp_data[1]
+                self.otp = (
+                    OTPVerification.objects.select_related("user")
+                    .filter(otp=otp_code_val, user_id=user_id)
+                    .first()
+                )
+            except signing.BadSignature:
+                raise ValidationError(detail={"error": "Invalid verification token."})
+        elif email and otp_code:
+            self.user = User.objects.filter(email=email).first()
+            if not self.user:
+                raise ValidationError(
+                    detail={
+                        "error": "No existing account is associated with this email."
+                    }
+                )
+            self.otp = (
+                OTPVerification.objects.select_related("user")
+                .filter(otp=otp_code, user=self.user)
+                .first()
+            )
+        else:
+            raise ValidationError(
+                detail={"error": "Either token or email and otp_code must be provided."}
+            )
+
+        if not getattr(self, "otp", None):
+            raise ValidationError(detail={"error": "Invalid OTP. Please try again."})
 
         self.user = self.otp.user
 
-        if self.otp.is_expired:
-            with transaction.atomic():
-                self.otp.delete()
-                EmailOTP(self.user).send_email()
+        if self.otp.is_used:
             raise ValidationError(
-                detail={"error": "Link expired. A new verification link has been sent."}
+                detail={"error": "OTP has already been used. Please request a new one."}
+            )
+
+        if self.otp.is_expired():
+            raise ValidationError(
+                detail={"error": "OTP has expired. Please request a new one."}
             )
         return data
 
     def save(self, **kwargs):
+        is_newly_verified = not self.user.is_email_verified
         with transaction.atomic():
-            self.user.is_email_verified = True
-            self.user.save()
-            self.otp.delete()
-        return self.user
+            if is_newly_verified:
+                self.user.is_email_verified = True
+                self.user.save()
+            self.otp.is_used = True
+            self.otp.save()
+
+        refresh_token = RefreshToken.for_user(self.user)
+        return {
+            "id": self.user.id,
+            "email": self.user.email,
+            "access": str(refresh_token.access_token),
+            "refresh": str(refresh_token),
+            "message": (
+                "Email verified successfully. You are now logged in."
+                if is_newly_verified
+                else "Login successful."
+            ),
+        }
 
     def to_representation(self, instance):
-        user_data = UserSerializer(instance).data
-        user_data.pop("created", None)
-        user_data["message"] = "Email verified successfully. You can now log in."
-        return user_data
+        return instance
 
 
 # ─── Login ────────────────────────────────────────────────────────────────────
@@ -211,24 +247,21 @@ class LoginSerializer(Serializer):
         return data
 
     def save(self, **kwargs):
-        # If 2FA is on, don't issue tokens yet — frontend will call LoginTOTPSerializer next
-        if self.user.has_active_2fa:
-            self.validated_data.clear()
-            self.validated_data["requires_2fa"] = True
-            self.validated_data["email"] = self.user.email
-            return self.validated_data
+        # Trigger email verification on every login using signals
+        with transaction.atomic():
+            login_otp_requested.send(
+                sender=self.__class__, user=self.user, context="login"
+            )
 
-        # No 2FA — issue tokens immediately
-        return self._issue_tokens()
-
-    def _issue_tokens(self):
-        refresh_token = RefreshToken.for_user(self.user)
         self.validated_data.clear()
-        self.validated_data["id"] = self.user.id
+        self.validated_data["requires_email_otp"] = True
+        if self.user.has_active_2fa:
+            self.validated_data["requires_2fa"] = True
+
         self.validated_data["email"] = self.user.email
-        self.validated_data["access"] = str(refresh_token.access_token)
-        self.validated_data["refresh"] = str(refresh_token)
-        self.validated_data["requires_2fa"] = False
+        self.validated_data["message"] = (
+            "OTP sent to your email. Please verify to continue."
+        )
         return self.validated_data
 
     def to_representation(self, instance):

@@ -11,36 +11,40 @@ def pynigeria_exception_handler(exc, context):
         response = Response(
             {"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    if isinstance(exc, (ValidationError, AuthenticationFailed)):
-        error_list = []
-        try:
-            for key, value in exc.get_full_details().items():
-                try:
-                    for error in value:
-                        if error["code"] == "required":
-                            error_list.append(f"{key.title()} field is required.")
-                        elif error["code"] == "blank":
-                            error_list.append(f"{key.title()} field cannot be blank.")
-                        elif error["code"] == "unique":
-                            error_list.append(error["message"].capitalize())
-                        elif error["code"] == "invalid_choice":
-                            error_list.append(error["message"])
-                        elif error["code"] == "invalid":
-                            error_list.append(error["message"].capitalize())
-                        else:
-                            error_list.append(error)
-                except:
-                    error_list.append(value["message"])
-            if len(error_list) == 1:
-                error_list = error_list[0]
+    if isinstance(exc, (ValidationError, AuthenticationFailed, Throttled)):
+        data = response.data
+        errors = []
 
-            response.data = {"detail": error_list}
-        except:
-            try:
-                response.data = {"detail": str(exc.detail["messages"][0]["message"])}
-            except:
-                response.data = {"detail": str(exc.detail)}
-        response.status_code = status.HTTP_400_BAD_REQUEST
+        if isinstance(data, dict):
+            for field, value in data.items():
+                # DRF error values are usually lists of strings/ErrorDetail
+                if isinstance(value, list):
+                    for v in value:
+                        msg = str(v)
+                        code = getattr(v, "code", None)
+                        if field not in ["detail", "error", "non_field_errors"]:
+                            if code == "required":
+                                errors.append(f"{field.title()} field is required.")
+                            elif code == "blank":
+                                errors.append(f"{field.title()} field cannot be blank.")
+                            else:
+                                errors.append(msg)
+                        else:
+                            errors.append(msg)
+                else:
+                    errors.append(str(value))
+        elif isinstance(data, list):
+            errors = [str(v) for v in data]
+        else:
+            errors = [str(data)]
+
+        if len(errors) == 1:
+            errors = errors[0]
+
+        response.data = {"detail": errors}
+        # Ensure status code 429 for Throttling
+        if isinstance(exc, Throttled):
+            response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
     elif isinstance(exc, IntegrityError):
         response.status_code = status.HTTP_409_CONFLICT
     elif isinstance(exc, Throttled):

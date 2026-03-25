@@ -1,10 +1,11 @@
+import re
 from django.core import mail
 from django.urls import reverse
 from django.utils import timezone
 from django_otp.plugins.otp_totp.models import TOTP, TOTPDevice
 from rest_framework.test import APITransactionTestCase
 
-from .models import OTPCode, User
+from .models import OTPVerification, User
 
 """
 RUN COMMAND:
@@ -19,20 +20,51 @@ class RegisterTestCase(APITransactionTestCase):
 
     def test_register_success(self):
         response = self.client.post(
-            self.register_path, data={"email": "test1@gmail.com"}
+            self.register_path,
+            data={"email": "test1@gmail.com", "password": "password123"},
         )
         for field in {"id", "email", "message"}:
             self.assertTrue(field in response.data["data"])
         self.assertEqual(response.data["data"]["is_email_verified"], False)
 
-        user = User.objects.filter(email="test1@gmail.com").first()
-        self.assertTrue(user.is_otp_email_sent)
         # Test for sent email
-        self.assertIsNotNone(mail.outbox[0].body.split("'")[1].split("/")[7])
+        self.assertIsNotNone(
+            re.search(r"verify/([^&\s\"' >]+)", mail.outbox[0].body).group(1)
+        )
+
+    def test_register_and_verify_success(self):
+        # 1. Register
+        response = self.client.post(
+            self.register_path,
+            data={"email": "newuser@gmail.com", "password": "password123"},
+        )
+        self.assertEqual(response.status_code, 201)
+
+        # 2. Extract token from mail
+        verification_token = re.search(
+            r"verify/([^&\s\"' >]+)", mail.outbox[-1].body
+        ).group(1)
+
+        # 3. Verify
+        response2 = self.client.post(
+            f"{reverse('authentication:verify-email-complete')}?token={verification_token}",
+            data={},
+        )
+        self.assertEqual(response2.status_code, 200)
+        self.assertEqual(
+            response2.data["data"]["message"],
+            "Email verified successfully. You are now logged in.",
+        )
+        self.assertIn("access", response2.data["data"])
+
+        # 4. Check user status
+        user = User.objects.get(email="newuser@gmail.com")
+        self.assertTrue(user.is_email_verified)
 
     def test_register_integrity_failure(self):
         response = self.client.post(
-            self.register_path, data={"email": "test@gmail.com"}
+            self.register_path,
+            data={"email": "test@gmail.com", "password": "password123"},
         )
         self.assertEqual(
             response.data["detail"], "An account with this email already exists."
@@ -54,10 +86,12 @@ class VerifyEmailBeginTestCase(APITransactionTestCase):
         )
         self.assertEqual(
             response.data["data"]["message"],
-            "Check your email for a verification link.",
+            "Check your email for a verification code/link.",
         )
-        self.assertIsNotNone(self.user.otp.code)
-        self.assertIsNotNone(mail.outbox[0].body.split("'")[1].split("/")[7])
+        self.assertIsNotNone(self.user.otps.first().otp)
+        self.assertIsNotNone(
+            re.search(r"verify/([^&\s\"' >]+)", mail.outbox[0].body).group(1)
+        )
 
     def test_verify_email_begin_missing_field_failure(self):
         response = self.client.post(self.verify_begin_path, data={})
@@ -82,74 +116,74 @@ class VerifyEmailBeginTestCase(APITransactionTestCase):
         )
         self.assertEqual(
             response.data["detail"],
-            "Check your email for an already existing verification link.",
+            "A verification link/code was already sent. Check your email.",
         )
-        self.assertIsNotNone(mail.outbox[0].body.split("'")[1].split("/")[7])
+        self.assertIsNotNone(
+            re.search(r"verify/([^&\s\"' >]+)", mail.outbox[0].body).group(1)
+        )
 
     def tearDown(self):
         User.objects.all().delete()
-        OTPCode.objects.all().delete()
+        OTPVerification.objects.all().delete()
         mail.outbox.clear()
 
 
 class VerifyEmailCompleteTestCase(APITransactionTestCase):
     def setUp(self):
         self.user = User.objects.create_user(email="test@gmail.com")
-        self.verification_token = mail.outbox[0].body.split("'")[1].split("/")[7]
+        self.verification_token = re.search(
+            r"verify/([^&\s\"' >]+)", mail.outbox[0].body
+        ).group(1)
 
     def test_verify_email_complete_success(self):
         response = self.client.post(
-            reverse(
-                "authentication:verify-email-complete",
-                kwargs={"token": self.verification_token},
-            ),
+            f"{reverse('authentication:verify-email-complete')}?token={self.verification_token}",
             data={},
         )
         self.assertEqual(
             response.data["data"]["message"],
-            "Your email has been verified successfully. Proceed to 2FA setup.",
+            "Email verified successfully. You are now logged in.",
         )
         response2 = self.client.post(
-            reverse(
-                "authentication:verify-email-complete",
-                kwargs={"token": self.verification_token},
-            ),
+            f"{reverse('authentication:verify-email-complete')}?token={self.verification_token}",
             data={},
         )
-        self.assertEqual(response2.data["detail"], "Otp code does not exist.")
+        self.assertEqual(
+            response2.data["detail"],
+            "OTP has already been used. Please request a new one.",
+        )
 
     def test_verify_email_complete_invalid_code_failure(self):
         response = self.client.post(
-            reverse(
-                "authentication:verify-email-complete",
-                kwargs={"token": self.verification_token + "n"},
-            ),
+            f"{reverse('authentication:verify-email-complete')}?token={self.verification_token}n",
             data={},
         )
-        self.assertEqual(response.data["detail"], "Invalid otp code detected.")
+        self.assertEqual(response.data["detail"], "Invalid verification token.")
 
     def test_verify_email_complete_expired_failure(self):
         user2 = User.objects.create_user(email="test2@gmail.com")
-        otp = OTPCode.objects.filter(user=user2).first()
-        otp.expiry = timezone.now() - timezone.timedelta(minutes=15)
+        otp = OTPVerification.objects.filter(user=user2).first()
+        # Set created_at to 15 minutes ago to trigger is_expired()
+        otp.created_at = timezone.now() - timezone.timedelta(minutes=15)
         otp.save()
-        verification_token2 = mail.outbox[1].body.split("'")[1].split("/")[7]
+        verification_token2 = re.search(
+            r"verify/([^&\s\"' >]+)", mail.outbox[1].body
+        ).group(1)
         response = self.client.post(
-            reverse(
-                "authentication:verify-email-complete",
-                kwargs={"token": verification_token2},
-            ),
+            f"{reverse('authentication:verify-email-complete')}?token={verification_token2}",
             data={},
         )
         self.assertEqual(
             response.data["detail"],
-            "Otp code has expired. a new verification link has been sent to your email.",
+            "OTP has expired. Please request a new one.",
         )
-        self.assertIsNotNone(mail.outbox[2].body.split("'")[1].split("/")[7])
+        self.assertIsNotNone(
+            re.search(r"verify/([^&\s\"' >]+)", mail.outbox[-1].body).group(1)
+        )
 
     def tearDown(self):
         User.objects.all().delete()
-        OTPCode.objects.all().delete()
+        OTPVerification.objects.all().delete()
         mail.outbox.clear()
 
 
@@ -159,6 +193,7 @@ class TOTPCreateVerifyTestCase(APITransactionTestCase):
         self.user = User.objects.create_user(
             email="admin@gmail.com", is_email_verified=True
         )
+        self.client.force_authenticate(user=self.user)
 
     def test_create_device_success(self):
         response = self.client.post(self.device_create, data={"email": self.user.email})
@@ -169,26 +204,15 @@ class TOTPCreateVerifyTestCase(APITransactionTestCase):
         response2 = self.client.post(
             self.device_create, data={"email": self.user.email}
         )
-        self.assertEqual(
-            response2.data["detail"], "A totp device already exists for this account."
-        )
+        self.assertEqual(response2.data["data"]["name"], self.user.email)
 
     def test_create_device_failure_unverified_email(self):
         self.user.is_email_verified = False
         self.user.save()
-        response = self.client.post(self.device_create, data={"email": self.user.email})
+        response = self.client.post(self.device_create)
         self.assertEqual(
             response.data["detail"],
-            "This account has not been verified. check your email for a verification link or request a new one.",
-        )
-
-    def test_create_device_failure_nonexisting_user(self):
-        response = self.client.post(
-            self.device_create, data={"email": "test@gmail.none"}
-        )
-        self.assertEqual(
-            response.data["detail"],
-            "No existing account is associated with this email.",
+            "Please verify your email before enabling 2FA.",
         )
 
     def tearDown(self):
@@ -202,6 +226,7 @@ class GetQRCodeTestCase(APITransactionTestCase):
         self.user = User.objects.create_user(
             email="admin@gmail.com", is_email_verified=True
         )
+        self.client.force_authenticate(user=self.user)
 
     def test_get_qrcode_success(self):
         self.client.post(
@@ -215,7 +240,7 @@ class GetQRCodeTestCase(APITransactionTestCase):
         response = self.client.post(self.qrcode, data={"email": self.user.email})
         self.assertEqual(
             response.data["detail"],
-            "No unconfirmed totp device is associated with this email.",
+            "No pending 2FA setup found. Please start 2FA setup first.",
         )
 
     def tearDown(self):
@@ -229,6 +254,7 @@ class VerifyTOTPDeviceTestCase(APITransactionTestCase):
         self.user = User.objects.create_user(
             email="admin@gmail.com", is_email_verified=True
         )
+        self.client.force_authenticate(user=self.user)
 
     def test_verify_totp_device_success(self):
         self.client.post(
@@ -253,7 +279,7 @@ class VerifyTOTPDeviceTestCase(APITransactionTestCase):
         response = self.client.post(
             self.verify_device, data={"email": self.user.email, "otp_token": 123456}
         )
-        self.assertEqual(response.data["detail"], "Invalid totp token detected.")
+        self.assertEqual(response.data["detail"], "Invalid TOTP code. Try again.")
 
     def tearDown(self):
         User.objects.all().delete()
@@ -263,53 +289,40 @@ class VerifyTOTPDeviceTestCase(APITransactionTestCase):
 class LoginTestCase(APITransactionTestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            email="admin@gmail.com", is_email_verified=True
-        )
-        self.otp_device = TOTPDevice.objects.create(
-            user=self.user, name=self.user.email, confirmed=True
+            email="admin@gmail.com", password="password123", is_email_verified=True
         )
         self.login = reverse("authentication:login")
 
     def test_login_success(self):
-        self.user.is_2fa_enabled = True
-        self.user.save()
-        otp_code = TOTP(self.otp_device.bin_key).token()
+        # Step 1: Login leads to OTP email
         response = self.client.post(
-            self.login, data={"email": self.user.email, "otp_code": otp_code}
+            self.login, data={"email": self.user.email, "password": "password123"}
         )
-        self.assertIn("access", response.data["data"])
+        self.assertTrue(response.data["data"]["requires_email_otp"])
         self.assertEqual(response.status_code, 200)
 
+        # Step 2: Verify OTP
+        otp_code = OTPVerification.objects.get(user=self.user).otp
+        response2 = self.client.post(
+            reverse("authentication:verify-email-complete"),
+            data={"email": self.user.email, "otp_code": otp_code},
+        )
+        self.assertEqual(response2.status_code, 200, f"Failed: {response2.data}")
+        self.assertIn("access", response2.data["data"])
+
     def test_login_failure_no_account(self):
-        self.user.is_2fa_enabled = True
-        self.user.save()
-        otp_code = TOTP(self.otp_device.bin_key).token()
         response = self.client.post(
-            self.login, data={"email": "admi1n@gmail.com", "otp_code": otp_code}
+            self.login, data={"email": "admi1n@gmail.com", "password": "password123"}
         )
         self.assertEqual(
             response.data["detail"], "No account is associated with this email."
         )
 
-    def test_login_failure_2fa_not_set(self):
+    def test_login_failure_wrong_password(self):
         response = self.client.post(
-            self.login, data={"email": self.user.email, "otp_code": 386267}
+            self.login, data={"email": self.user.email, "password": "wrongpassword"}
         )
-        self.assertEqual(
-            response.data["detail"], "2FA setup must be completed before login."
-        )
-
-    def test_login_failure_no_totp_device(self):
-        self.user.is_2fa_enabled = True
-        self.user.save()
-        self.otp_device.delete()
-        response = self.client.post(
-            self.login, data={"email": self.user.email, "otp_code": 638387}
-        )
-        self.assertEqual(
-            response.data["detail"],
-            "No confirmed totp device is associated with this email.",
-        )
+        self.assertEqual(response.data["detail"], "Incorrect email or password.")
 
     def tearDown(self):
         return super().tearDown()

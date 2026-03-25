@@ -8,7 +8,7 @@ from rest_framework import serializers
 from taggit.serializers import TaggitSerializer, TagListSerializerField
 
 from common.helper import Helper
-from job_listing_api.models import (
+from apps.job_listing_api.models import (
     Bookmark,
     BookmarkFolder,
     Company,
