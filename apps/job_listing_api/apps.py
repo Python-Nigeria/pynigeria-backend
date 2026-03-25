@@ -7,4 +7,4 @@ class JobApiConfig(AppConfig):
     verbose_name = "Job Listing"
 
     def ready(self) -> None:
-        from . import signals
+        pass

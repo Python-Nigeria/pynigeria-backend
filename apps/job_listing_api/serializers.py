@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -200,7 +199,6 @@ class JobSerializer(TaggitSerializer, serializers.ModelSerializer, Helper):
 
         # Create the new job instance
         with transaction.atomic():
-
             new_instance = Job.objects.create(**new_job_data)
 
             # Update Many-to-Many fields (skills and tags)
@@ -266,7 +264,6 @@ class BookmarkFolderSerializer(serializers.ModelSerializer, Helper):
         return data
 
     def create(self, validated_data: dict):
-
         if "user" not in validated_data:
             validated_data["user"] = self.context.get("request").user
 
@@ -276,7 +273,7 @@ class BookmarkFolderSerializer(serializers.ModelSerializer, Helper):
             )
         return folder_instance
 
-    def update(self, instance, validated_data:dict):
+    def update(self, instance, validated_data: dict):
         with transaction.atomic():
             for attrs, value in validated_data.items():
                 setattr(instance, attrs, value)
@@ -291,7 +288,6 @@ class BookmarkSerializer(serializers.ModelSerializer, Helper):
     )
 
     class OverrideQuery(serializers.HyperlinkedRelatedField):
-
         def get_queryset(self):
             request = self.context.get("request")
             if request and hasattr(request, "user"):
@@ -311,13 +307,11 @@ class BookmarkSerializer(serializers.ModelSerializer, Helper):
         read_only_fields = ["user"]
 
     def validate(self, attrs):
-
         if "notes" in attrs and attrs["notes"]:
             attrs["notes"] = attrs["notes"].strip().lower()
         return super().validate(attrs)
 
     def create(self, validated_data: dict):
-
         if "user" not in validated_data:
             validated_data["user"] = self.context.get("request").user
 
@@ -326,8 +320,8 @@ class BookmarkSerializer(serializers.ModelSerializer, Helper):
                 **validated_data
             )
         return bookmark_instance
-    
-    def update(self, instance, validated_data:dict):
+
+    def update(self, instance, validated_data: dict):
         with transaction.atomic():
             for attrs, value in validated_data.items():
                 setattr(instance, attrs, value)

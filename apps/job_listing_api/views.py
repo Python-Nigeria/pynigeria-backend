@@ -1,13 +1,12 @@
 from django.db.models import Q
 from django.db.transaction import atomic
-from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -148,7 +147,6 @@ class JobApproveView(APIView):
 
     @atomic()
     def post(self, request, slug):
-
         job_instance = Job.objects.get(slug=slug)
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)

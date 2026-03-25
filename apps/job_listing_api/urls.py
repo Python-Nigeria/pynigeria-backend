@@ -20,5 +20,5 @@ router.register(r"bookmark-folders", BookmarkFolderViewset)
 urlpatterns = [
     path("", include(router.urls)),
     path("job/approve/<slug:slug>/", JobApproveView.as_view(), name="job-approve"),
-    path("login/", TokenObtainPairView.as_view())
+    path("login/", TokenObtainPairView.as_view()),
 ]

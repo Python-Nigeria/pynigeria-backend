@@ -42,9 +42,6 @@ class JobBookmarkStatus(models.TextChoices):
     ARCHIVED = "Archived"
 
 
-
-
-
 class Company(models.Model):
     name = models.CharField(max_length=255, unique=True)
     location = models.CharField(max_length=255, null=True)
@@ -54,11 +51,14 @@ class Company(models.Model):
     def __str__(self) -> str:
         return self.name
 
+
 class Skill(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
     def __str__(self) -> str:
         return self.name
+
+
 class Job(models.Model):
     company = models.ForeignKey(
         Company, on_delete=models.SET_NULL, null=True, to_field="name"
@@ -169,7 +169,9 @@ class Bookmark(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="job_bookmarks"
     )
     job = models.ForeignKey(
-        Job, on_delete=models.CASCADE, related_name="bookmarks"  # Your Job model
+        Job,
+        on_delete=models.CASCADE,
+        related_name="bookmarks",  # Your Job model
     )
     folder = models.ForeignKey(
         BookmarkFolder,

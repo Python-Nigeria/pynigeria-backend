@@ -1,5 +1,3 @@
-from time import sleep
-
 from django.core import mail
 from django.urls import reverse
 from django.utils import timezone

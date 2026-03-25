@@ -2,8 +2,7 @@ from base64 import b32encode
 
 from django.conf import settings
 from django.core import signing
-from django.db import IntegrityError, transaction
-from django.utils import timezone
+from django.db import transaction
 from django.utils.dateformat import format
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from pyotp import TOTP
@@ -28,7 +27,14 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "email", "is_email_verified", "is_2fa_enabled", "auth_provider", "created")
+        fields = (
+            "id",
+            "email",
+            "is_email_verified",
+            "is_2fa_enabled",
+            "auth_provider",
+            "created",
+        )
         read_only_fields = (
             "id",
             "email",
@@ -49,6 +55,7 @@ class TOTPDeviceSerializer(ModelSerializer):
 
 
 # ─── Registration ────────────────────────────────────────────────────────────
+
 
 class RegisterSerializer(Serializer):
     id = CharField(read_only=True)
@@ -73,11 +80,14 @@ class RegisterSerializer(Serializer):
 
     def to_representation(self, instance):
         user_data = UserSerializer(instance).data
-        user_data["message"] = "Account created. Check your email to verify your account."
+        user_data["message"] = (
+            "Account created. Check your email to verify your account."
+        )
         return user_data
 
 
 # ─── Email Verification ───────────────────────────────────────────────────────
+
 
 class EmailVerifyBeginSerializer(Serializer):
     email = EmailField(write_only=True)
@@ -95,12 +105,11 @@ class EmailVerifyBeginSerializer(Serializer):
                 detail={"error": "This account has already been verified."}
             )
         # Prevent spamming — only block if a valid unexpired OTP already exists
-        if (
-            hasattr(self.user, "otp")
-            and not self.user.otp.is_expired
-        ):
+        if hasattr(self.user, "otp") and not self.user.otp.is_expired:
             raise ValidationError(
-                detail={"error": "A verification link was already sent. Check your email."}
+                detail={
+                    "error": "A verification link was already sent. Check your email."
+                }
             )
         return data
 
@@ -160,12 +169,14 @@ class EmailVerifyCompleteSerializer(Serializer):
 
 # ─── Login ────────────────────────────────────────────────────────────────────
 
+
 class LoginSerializer(Serializer):
     """
     Step 1 of login — always requires email + password.
     If the user has 2FA enabled, returns a flag telling the frontend
     to prompt for the TOTP code next. Otherwise issues tokens immediately.
     """
+
     email = EmailField()
     password = CharField(write_only=True)
     id = CharField(read_only=True)
@@ -229,6 +240,7 @@ class LoginTOTPSerializer(Serializer):
     Step 2 of login — only called if LoginSerializer returned requires_2fa=True.
     Verifies the TOTP code and then issues tokens.
     """
+
     email = EmailField()
     otp_token = CharField(write_only=True)
     id = CharField(read_only=True)
@@ -276,8 +288,10 @@ class LoginTOTPSerializer(Serializer):
 
 # ─── Optional 2FA Setup (from settings page) ─────────────────────────────────
 
+
 class TOTPDeviceCreateSerializer(Serializer):
     """Called when an already-logged-in user chooses to enable 2FA from settings."""
+
     user = CharField(read_only=True)
     name = CharField(read_only=True)
     confirmed = BooleanField(read_only=True, default=False)
@@ -308,16 +322,17 @@ class TOTPDeviceCreateSerializer(Serializer):
 
 class QRCodeDataSerializer(Serializer):
     """Returns the otpauth:// URL used to generate the QR code."""
+
     otpauth_url = CharField(read_only=True)
 
     def validate(self, data):
         self.user = self.context["request"].user
-        self.device = TOTPDevice.objects.filter(
-            user=self.user, confirmed=False
-        ).first()
+        self.device = TOTPDevice.objects.filter(user=self.user, confirmed=False).first()
         if not self.device:
             raise ValidationError(
-                detail={"error": "No pending 2FA setup found. Please start 2FA setup first."}
+                detail={
+                    "error": "No pending 2FA setup found. Please start 2FA setup first."
+                }
             )
         return data
 
@@ -327,15 +342,14 @@ class QRCodeDataSerializer(Serializer):
 
 class VerifyTOTPDeviceSerializer(Serializer):
     """Confirms the TOTP device after the user scans the QR code and enters their first code."""
+
     otp_token = CharField(write_only=True)
     confirmed = BooleanField(read_only=True)
     message = CharField(read_only=True)
 
     def validate(self, data):
         self.user = self.context["request"].user
-        self.device = TOTPDevice.objects.filter(
-            user=self.user, confirmed=False
-        ).first()
+        self.device = TOTPDevice.objects.filter(user=self.user, confirmed=False).first()
         if not self.device:
             raise ValidationError(
                 detail={"error": "No pending 2FA device found for this account."}
