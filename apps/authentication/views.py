@@ -20,7 +20,7 @@ from .serializers import (
     EmailVerifyBeginSerializer,
     EmailVerifyCompleteSerializer,
     LoginSerializer,
-    LoginTOTPSerializer,       # new — Step 2 of login
+    LoginTOTPSerializer,  # new — Step 2 of login
     QRCodeDataSerializer,
     RegisterSerializer,
     TOTPDeviceCreateSerializer,
@@ -30,6 +30,7 @@ from .social_authentication import complete_social_authentication
 
 
 # ─── Registration ─────────────────────────────────────────────────────────────
+
 
 class RegisterView(APIView):
     serializer_class = RegisterSerializer
@@ -49,8 +50,10 @@ class RegisterView(APIView):
 
 # ─── Email Verification ───────────────────────────────────────────────────────
 
+
 class VerifyEmailBeginView(APIView):
     """Resend verification email if the original link was missed or expired."""
+
     serializer_class = EmailVerifyBeginSerializer
     throttle_classes = [AnonRateThrottle]
     permission_classes = [AllowAny]
@@ -84,6 +87,7 @@ class VerifyEmailCompleteView(APIView):
 
 # ─── Login ────────────────────────────────────────────────────────────────────
 
+
 class LoginView(APIView):
     """
     Step 1 — validates email + password.
@@ -91,6 +95,7 @@ class LoginView(APIView):
     Returns { requires_2fa: true, email } if 2FA is on, so the frontend
     knows to show the TOTP prompt and call LoginTOTPView next.
     """
+
     serializer_class = LoginSerializer
     throttle_classes = [AnonRateThrottle]
     permission_classes = [AllowAny]
@@ -108,6 +113,7 @@ class LoginTOTPView(APIView):
     Step 2 — only called when LoginView returned requires_2fa=True.
     Accepts the 6-digit TOTP code and returns tokens if valid.
     """
+
     serializer_class = LoginTOTPSerializer
     throttle_classes = [AnonRateThrottle]
     permission_classes = [AllowAny]
@@ -122,14 +128,16 @@ class LoginTOTPView(APIView):
 
 # ─── Optional 2FA Setup (authenticated users only) ───────────────────────────
 
+
 class TOTPDeviceCreateView(APIView):
     """
     Creates an unconfirmed TOTP device for the logged-in user.
     Requires authentication — 2FA setup lives in settings, not during signup.
     """
+
     serializer_class = TOTPDeviceCreateSerializer
-    throttle_classes = [UserRateThrottle]     # authenticated throttle, not anon
-    permission_classes = [IsAuthenticated]    # must be logged in
+    throttle_classes = [UserRateThrottle]  # authenticated throttle, not anon
+    permission_classes = [IsAuthenticated]  # must be logged in
 
     @extend_schema(operation_id="v1_create_totp_device", tags=["auth_v1"])
     def post(self, request):
@@ -140,7 +148,11 @@ class TOTPDeviceCreateView(APIView):
         if serializer.is_valid(raise_exception=True):
             device = serializer.save()
             return Response(
-                {"data": self.serializer_class(device, context={"request": request}).data},
+                {
+                    "data": self.serializer_class(
+                        device, context={"request": request}
+                    ).data
+                },
                 status=status.HTTP_201_CREATED,
             )
 
@@ -150,6 +162,7 @@ class GetQRCodeView(APIView):
     Returns a PNG QR code image for the user's unconfirmed TOTP device.
     Requires authentication.
     """
+
     serializer_class = QRCodeDataSerializer
     throttle_classes = [UserRateThrottle]
     permission_classes = [IsAuthenticated]
@@ -211,6 +224,7 @@ class VerifyTOTPDeviceView(APIView):
     Confirms the TOTP device after the user scans the QR and enters their first code.
     Requires authentication.
     """
+
     serializer_class = VerifyTOTPDeviceSerializer
     throttle_classes = [UserRateThrottle]
     permission_classes = [IsAuthenticated]
@@ -223,12 +237,17 @@ class VerifyTOTPDeviceView(APIView):
         if serializer.is_valid(raise_exception=True):
             device = serializer.save()
             return Response(
-                {"data": self.serializer_class(device, context={"request": request}).data},
+                {
+                    "data": self.serializer_class(
+                        device, context={"request": request}
+                    ).data
+                },
                 status=status.HTTP_200_OK,
             )
 
 
 # ─── Social Auth ──────────────────────────────────────────────────────────────
+
 
 @method_decorator(
     [csrf_exempt, never_cache, psa("authentication:social-complete")], name="get"
@@ -265,6 +284,7 @@ class SocialAuthenticationCompleteView(APIView):
 
 
 # ─── CSRF ─────────────────────────────────────────────────────────────────────
+
 
 class CsrfTokenView(APIView):
     permission_classes = [AllowAny]

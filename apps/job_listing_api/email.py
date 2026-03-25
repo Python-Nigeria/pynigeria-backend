@@ -57,7 +57,7 @@ class JobNotificationEmail:
             "user_name": self.job_instance.posted_by.email,
             "email_message": f"Your job titled {self.job_instance.job_title.title()} has been {job_status}. ",
             "additional_message": message,
-            "contact_support": f"to contact support",
+            "contact_support": "to contact support",
             "job_link": f"{settings.CURRENT_ORIGIN}/admin/job_listing_api/job/{self.job_instance.id}/",
             "year": datetime.now().strftime("%Y"),
         }

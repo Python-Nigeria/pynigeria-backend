@@ -27,9 +27,7 @@ class EmailOTP:
 
         # This should point to your frontend verify page, not the API endpoint
         # The frontend page then calls the API with the token
-        verification_url = (
-            f"{settings.CURRENT_ORIGIN}/account/verify/{signed_token}/"
-        )
+        verification_url = f"{settings.CURRENT_ORIGIN}/account/verify/{signed_token}/"
 
         subject = "Verify your Python 9ja email"
         text_fallback = (
@@ -102,7 +100,9 @@ class EmailOTP:
 
               <!-- Feature list -->
               <table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:32px;">
-                {"".join(f'''
+                {
+            "".join(
+                f'''
                 <tr>
                   <td style="padding:6px 0;">
                     <table cellpadding="0" cellspacing="0">
@@ -112,12 +112,15 @@ class EmailOTP:
                       </tr>
                     </table>
                   </td>
-                </tr>''' for icon, text in [
+                </tr>'''
+                for icon, text in [
                     ("💼", "120+ Python job listings updated weekly"),
                     ("📰", "Curated Nigerian tech news every week"),
                     ("🤝", "Project collaborations &amp; mentorship"),
                     ("💬", "Community forums &amp; developer discussions"),
-                ])}
+                ]
+            )
+        }
               </table>
 
               <!-- CTA Button -->
@@ -170,11 +173,15 @@ class EmailOTP:
           <tr>
             <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
               <p style="margin:0;font-size:12px;color:#9ca3af;">
-                © {settings.CURRENT_YEAR if hasattr(settings, 'CURRENT_YEAR') else '2025'} Python 9ja · Made with ❤️ in Nigeria 🇳🇬
+                © {
+            settings.CURRENT_YEAR if hasattr(settings, "CURRENT_YEAR") else "2025"
+        } Python 9ja · Made with ❤️ in Nigeria 🇳🇬
               </p>
               <p style="margin:6px 0 0;font-size:12px;color:#9ca3af;">
                 You're receiving this because you signed up at
-                <a href="{settings.CURRENT_ORIGIN}" style="color:#059669;text-decoration:none;">
+                <a href="{
+            settings.CURRENT_ORIGIN
+        }" style="color:#059669;text-decoration:none;">
                   python9ja.com
                 </a>
               </p>

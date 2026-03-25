@@ -115,7 +115,10 @@ class OTPCode(Model):
     Short-lived 6-digit code sent to the user's email.
     Used for: email verification on signup, and as the 2FA step if user has no TOTP device.
     """
-    code = CharField(max_length=6, db_index=True)  # No unique=True — two users can get same digits
+
+    code = CharField(
+        max_length=6, db_index=True
+    )  # No unique=True — two users can get same digits
     user = OneToOneField(User, related_name="otp", on_delete=CASCADE)
     expiry = DateTimeField(db_index=True)
 

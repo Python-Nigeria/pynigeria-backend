@@ -11,7 +11,7 @@ from .views import (
     VerifyEmailBeginView,
     VerifyEmailCompleteView,
     VerifyTOTPDeviceView,
-    CsrfTokenView
+    CsrfTokenView,
 )
 
 app_name = "authentication"
@@ -34,7 +34,15 @@ urlpatterns = [
         "totp-device/verify/", VerifyTOTPDeviceView.as_view(), name="verify-totp-device"
     ),
     path("login/", LoginView.as_view(), name="login"),
-    path(f"social/begin/<str:backend>{extra}", SocialAuthenticationBeginView.as_view(), name="social-begin"),
-    path("social/complete/<str:backend>/", SocialAuthenticationCompleteView.as_view(), name="social-complete"),
-    path("csrfToken/",CsrfTokenView.as_view())
+    path(
+        f"social/begin/<str:backend>{extra}",
+        SocialAuthenticationBeginView.as_view(),
+        name="social-begin",
+    ),
+    path(
+        "social/complete/<str:backend>/",
+        SocialAuthenticationCompleteView.as_view(),
+        name="social-complete",
+    ),
+    path("csrfToken/", CsrfTokenView.as_view()),
 ]

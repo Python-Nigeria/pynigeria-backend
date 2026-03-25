@@ -1,11 +1,10 @@
 import os
 from pathlib import Path
-import sys
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-#BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env_file = BASE_DIR / ".env"
 
 if env_file.exists():
@@ -14,14 +13,16 @@ else:
     print("No .env file found, using system environment variables.")
 
 
-AUTH_USER_MODEL = 'authentication.User'  # should point to your custom user model
+AUTH_USER_MODEL = "authentication.User"  # should point to your custom user model
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY_VALUE", default="default")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG_VALUE", "true").lower() == "true"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS_VALUE", "127.0.0.1").split(",")  # Use commas to seperate muliple host values
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS_VALUE", "127.0.0.1").split(
+    ","
+)  # Use commas to seperate muliple host values
 
 # CSRF_TRUSTED_ORIGINS = os.getenv(
 #     "CSRF_TRUSTED_ORIGINS_VALUE", "http://127.0.0.1"
@@ -42,7 +43,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "drf_spectacular",  # for openapi/swagger documentation
-   # "drf_spectacular_sidecar",
+    "drf_spectacular_sidecar",
     "django_otp",  # for 2FA
     "django_otp.plugins.otp_totp",
     "django_filters",
@@ -124,8 +125,8 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 AUTH_USER_MODEL = "authentication.User"
 
 REST_FRAMEWORK = {
@@ -155,7 +156,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Email settings
-#CURRENT_ORIGIN = "http://localhost:3000" 
+# CURRENT_ORIGIN = "http://localhost:3000"
 SENDER_EMAIL = os.getenv("SENDER_EMAIL_VALUE")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
@@ -172,11 +173,16 @@ OTP_TOTP_ISSUER = "pynigeria"
 TAGGIT_CASE_INSENSITIVE = True
 AUTHENTICATION_BACKENDS = (
     "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.github.GithubOAuth2",
     "django.contrib.auth.backends.ModelBackend",
 )
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
+
+SOCIAL_AUTH_GITHUB_KEY = os.getenv("SOCIAL_AUTH_GITHUB_KEY")
+SOCIAL_AUTH_GITHUB_SECRET = os.getenv("SOCIAL_AUTH_GITHUB_SECRET")
+SOCIAL_AUTH_GITHUB_SCOPE = ["user:email"]
 
 # Logging
 LOG_DIR = BASE_DIR / "logs"
@@ -207,11 +213,31 @@ LOGGING = {
         },
     },
     "loggers": {
-        "authentication": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
-        "job_listing_api": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
-        "knowledge_base_api": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
-        "django.request": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
-        "django.security": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
+        "authentication": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "job_listing_api": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "knowledge_base_api": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
     "root": {
         "handlers": ["console", "file"],

@@ -1,19 +1,15 @@
 import hashlib
-import random
 import uuid
 from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.urls import reverse
-from job_listing_api.models import Job
 
 
 User = get_user_model()
 
 
 class Helper:
-
     def generate_slug(self):
         # Generate initial UUID
         initial_uuid = uuid.uuid4()
@@ -33,9 +29,9 @@ class Helper:
                 for items in data[field]:
                     if "skill" in items and items["skill"] is not None:
                         items["skill"] = {"name": items["skill"]["name"].title()}
-                # data[field] = 
+                # data[field] =
 
-    def _format_posted_by(self, data_field:str, data):
+    def _format_posted_by(self, data_field: str, data):
         if data_field in data:
             user = User.objects.filter(id=data[data_field]).first()
             data[data_field] = user.email.title() if user else None
@@ -69,7 +65,7 @@ class Helper:
             "application_deadline",
             "scheduled_publish_at",
             "published_at",
-            "updated_at"
+            "updated_at",
         ]:
             if field in data and data[field]:
                 try:

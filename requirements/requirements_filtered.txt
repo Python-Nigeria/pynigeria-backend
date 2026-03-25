@@ -41,6 +41,7 @@ qrcode==8.0
 referencing==0.35.1
 requests==2.32.3
 requests-oauthlib==2.0.0
+rich==14.3.3
 rpds-py==0.22.3
 social-auth-app-django==5.4.2
 social-auth-core==4.5.4

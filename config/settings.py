@@ -13,14 +13,16 @@ else:
     print("No .env file found, using system environment variables.")
 
 
-AUTH_USER_MODEL = 'authentication.User'  # should point to your custom user model
+AUTH_USER_MODEL = "authentication.User"  # should point to your custom user model
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY_VALUE", default="default")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG_VALUE", "true").lower() == "true"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS_VALUE", "127.0.0.1").split(",")  # Use commas to seperate muliple host values
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS_VALUE", "127.0.0.1").split(
+    ","
+)  # Use commas to seperate muliple host values
 
 # CSRF_TRUSTED_ORIGINS = os.getenv(
 #     "CSRF_TRUSTED_ORIGINS_VALUE", "http://127.0.0.1"
@@ -29,8 +31,8 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS_VALUE", "127.0.0.1").split(",")  # Use 
 # )  # Same comma-value-seperation as above
 
 # SECURITY WARNING: don't run with debug turned on in production!
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000',"https://pynigeria.vercel.app/"]
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "https://pynigeria.vercel.app/"]
 CSRF_COOKIE_HTTPONLY = False
 DEBUG = True
 
@@ -50,7 +52,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "drf_spectacular",  # for openapi/swagger documentation
-   # "drf_spectacular_sidecar",
+    # "drf_spectacular_sidecar",
     "django_otp",  # for 2FA
     "django_otp.plugins.otp_totp",
     "django_filters",
@@ -147,8 +149,8 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -187,7 +189,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Email settings
-#CURRENT_ORIGIN = "http://localhost:3000" 
+# CURRENT_ORIGIN = "http://localhost:3000"
 CURRENT_ORIGIN = "https://pynigeria.vercel.app/"
 SENDER_EMAIL = os.getenv("SENDER_EMAIL_VALUE")
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -211,8 +213,8 @@ CORS_ALLOWED_ORIGINS = [
 # Allow cookies/credentials to be sent
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 
@@ -253,11 +255,31 @@ LOGGING = {
         },
     },
     "loggers": {
-        "authentication": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
-        "job_listing_api": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
-        "knowledge_base_api": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
-        "django.request": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
-        "django.security": {"handlers": ["console", "file"], "level": "INFO", "propagate": False},
+        "authentication": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "job_listing_api": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "knowledge_base_api": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
     "root": {
         "handlers": ["console", "file"],

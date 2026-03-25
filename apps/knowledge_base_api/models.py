@@ -19,7 +19,6 @@ class PublishManager(models.Manager):
 
 
 class UserUpload(models.Model):
-
     tags = TaggableManager()
 
     UPLOAD_TYPE = [
@@ -41,7 +40,7 @@ class UserUpload(models.Model):
         file_extension = value.name.split(".")[-1].lower()
         if file_extension not in allowed_files:
             raise ValidationError(
-                f'Unsupported file type. Allowed types: {", ".join(allowed_files)}'
+                f"Unsupported file type. Allowed types: {', '.join(allowed_files)}"
             )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="uploads")

@@ -6,12 +6,7 @@ from .models import Bookmark, BookmarkFolder, Company, Job, JobSkill, Skill
 # Register your models here.
 @register(Job)
 class JobAdmin(ModelAdmin):
-    list_display = (
-        "job_title",
-        "company_name",
-        "created_at",
-        "slug"
-    )
+    list_display = ("job_title", "company_name", "created_at", "slug")
     list_filter = ("job_title", "company_name", "employment_type", "salary")
     readonly_fields = ["created_at"]
 
