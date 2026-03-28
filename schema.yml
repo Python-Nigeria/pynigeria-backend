@@ -3,388 +3,26 @@ info:
   title: PYNIGERIA BACKEND API
   version: 1.0.0
 paths:
-  /api/bookmark/:
+  /api/v1/authentication/csrfToken/:
     get:
-      operationId: api_bookmark_list
+      operationId: v1_csrf_token
       tags:
-      - api
+      - auth_v1
       security:
       - cookieAuth: []
       - basicAuth: []
+      - {}
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Bookmark'
-          description: ''
-    post:
-      operationId: api_bookmark_create
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateBookmark'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CreateBookmark'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CreateBookmark'
-        required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateBookmark'
-          description: ''
-  /api/bookmark/{id}/:
-    get:
-      operationId: api_bookmark_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this bookmark.
-        required: true
-      tags:
-      - api
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Bookmark'
-          description: ''
-    put:
-      operationId: api_bookmark_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this bookmark.
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Bookmark'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Bookmark'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Bookmark'
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Bookmark'
-          description: ''
-    patch:
-      operationId: api_bookmark_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this bookmark.
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBookmark'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBookmark'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBookmark'
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Bookmark'
-          description: ''
-    delete:
-      operationId: api_bookmark_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this bookmark.
-        required: true
-      tags:
-      - api
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '204':
           description: No response body
-  /api/job/:
-    get:
-      operationId: api_job_list
-      parameters:
-      - in: query
-        name: company
-        schema:
-          type: string
-      - in: query
-        name: created_at_after
-        schema:
-          type: string
-          format: date
-      - in: query
-        name: created_at_before
-        schema:
-          type: string
-          format: date
-      - in: query
-        name: employment_type
-        schema:
-          type: string
-          enum:
-          - Contract
-          - Full Time
-          - Internship
-          - Part Time
-          - Voluntary
-        description: |-
-          * `Full Time` - Full Time
-          * `Part Time` - Part Time
-          * `Contract` - Contract
-          * `Internship` - Internship
-          * `Voluntary` - Voluntary
-      - in: query
-        name: location
-        schema:
-          type: string
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - in: query
-        name: posted_by
-        schema:
-          type: string
-      - in: query
-        name: posted_by__id
-        schema:
-          type: string
-      - in: query
-        name: salary
-        schema:
-          type: number
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
-      - in: query
-        name: skills
-        schema:
-          type: string
-      - in: query
-        name: skills__name
-        schema:
-          type: string
-      - in: query
-        name: title
-        schema:
-          type: string
-      tags:
-      - api
-      security:
-      - cookieAuth: []
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Job'
-          description: ''
-    post:
-      operationId: api_job_create
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Job'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Job'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Job'
-        required: true
-      security:
-      - cookieAuth: []
-      - jwtAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-          description: ''
-  /api/job/{slug}/:
-    get:
-      operationId: api_job_retrieve
-      parameters:
-      - in: path
-        name: slug
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - api
-      security:
-      - cookieAuth: []
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-          description: ''
-    put:
-      operationId: api_job_update
-      parameters:
-      - in: path
-        name: slug
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Job'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Job'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Job'
-        required: true
-      security:
-      - cookieAuth: []
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-          description: ''
-    patch:
-      operationId: api_job_partial_update
-      parameters:
-      - in: path
-        name: slug
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedJob'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedJob'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedJob'
-      security:
-      - cookieAuth: []
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-          description: ''
-    delete:
-      operationId: api_job_destroy
-      parameters:
-      - in: path
-        name: slug
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - api
-      security:
-      - cookieAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/job/job-list/:
-    get:
-      operationId: api_job_job_list_retrieve
-      tags:
-      - api
-      security:
-      - cookieAuth: []
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-          description: ''
   /api/v1/authentication/login/:
     post:
       operationId: v1_login
+      description: |-
+        Step 1 — validates email + password.
+        Returns tokens immediately if 2FA is off.
+        Returns { requires_2fa: true, email } if 2FA is on, so the frontend
+        knows to show the TOTP prompt and call LoginTOTPView next.
       tags:
       - auth_v1
       requestBody:
@@ -402,6 +40,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - {}
       responses:
         '200':
           content:
@@ -429,6 +68,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - {}
       responses:
         '200':
           content:
@@ -439,7 +79,6 @@ paths:
   /api/v1/authentication/social/begin/{backend}/:
     get:
       operationId: v1_social_auth_begin
-      description: This view initiates social oauth authentication
       parameters:
       - in: path
         name: backend
@@ -451,13 +90,13 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - {}
       responses:
         '200':
           description: No response body
   /api/v1/authentication/social/complete/{backend}/:
     get:
       operationId: v1_social_auth_complete
-      description: This view completes social oauth authentication
       parameters:
       - in: path
         name: backend
@@ -469,12 +108,16 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - {}
       responses:
         '200':
           description: No response body
   /api/v1/authentication/totp-device/create/:
     post:
       operationId: v1_create_totp_device
+      description: |-
+        Creates an unconfirmed TOTP device for the logged-in user.
+        Requires authentication — 2FA setup lives in settings, not during signup.
       tags:
       - auth_v1
       requestBody:
@@ -488,7 +131,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/TOTPDeviceCreate'
-        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -502,6 +144,9 @@ paths:
   /api/v1/authentication/totp-device/qrcode/:
     post:
       operationId: v1_get_qrcode
+      description: |-
+        Returns a PNG QR code image for the user's unconfirmed TOTP device.
+        Requires authentication.
       tags:
       - auth_v1
       requestBody:
@@ -515,7 +160,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/QRCodeData'
-        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -529,6 +173,9 @@ paths:
   /api/v1/authentication/totp-device/verify/:
     post:
       operationId: v1_verify_totp_device
+      description: |-
+        Confirms the TOTP device after the user scans the QR and enters their first code.
+        Requires authentication.
       tags:
       - auth_v1
       requestBody:
@@ -556,8 +203,7 @@ paths:
   /api/v1/authentication/verify-email/begin/:
     post:
       operationId: v1_verify_email_begin
-      description: This view exists to initiate email verification manually if the
-        auto option fails.
+      description: Resend verification email if the original link was missed or expired.
       tags:
       - auth_v1
       requestBody:
@@ -575,6 +221,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - {}
       responses:
         '200':
           content:
@@ -582,15 +229,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/EmailVerifyBegin'
           description: ''
-  /api/v1/authentication/verify-email/complete/{token}/:
+  /api/v1/authentication/verify-email/complete/:
     post:
       operationId: v1_verify_email_complete
-      parameters:
-      - in: path
-        name: token
-        schema:
-          type: string
-        required: true
       tags:
       - auth_v1
       requestBody:
@@ -607,6 +248,7 @@ paths:
       security:
       - cookieAuth: []
       - basicAuth: []
+      - {}
       responses:
         '200':
           content:
@@ -614,11 +256,556 @@ paths:
               schema:
                 $ref: '#/components/schemas/EmailVerifyComplete'
           description: ''
+  /api/v1/bookmark/:
+    get:
+      operationId: v1_bookmark_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bookmark'
+          description: ''
+    post:
+      operationId: v1_bookmark_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Bookmark'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Bookmark'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Bookmark'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bookmark'
+          description: ''
+  /api/v1/bookmark-folders/:
+    get:
+      operationId: v1_bookmark_folders_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookmarkFolder'
+          description: ''
+    post:
+      operationId: v1_bookmark_folders_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookmarkFolder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookmarkFolder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookmarkFolder'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarkFolder'
+          description: ''
+  /api/v1/bookmark-folders/{id}/:
+    get:
+      operationId: v1_bookmark_folders_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bookmark folder.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarkFolder'
+          description: ''
+    put:
+      operationId: v1_bookmark_folders_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bookmark folder.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookmarkFolder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookmarkFolder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookmarkFolder'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarkFolder'
+          description: ''
+    patch:
+      operationId: v1_bookmark_folders_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bookmark folder.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBookmarkFolder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBookmarkFolder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBookmarkFolder'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarkFolder'
+          description: ''
+    delete:
+      operationId: v1_bookmark_folders_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bookmark folder.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/bookmark/{id}/:
+    get:
+      operationId: v1_bookmark_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bookmark.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bookmark'
+          description: ''
+    put:
+      operationId: v1_bookmark_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bookmark.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Bookmark'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Bookmark'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Bookmark'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bookmark'
+          description: ''
+    patch:
+      operationId: v1_bookmark_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bookmark.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBookmark'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBookmark'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBookmark'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bookmark'
+          description: ''
+    delete:
+      operationId: v1_bookmark_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this bookmark.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/job/:
+    get:
+      operationId: v1_job_list
+      parameters:
+      - in: query
+        name: employment_type
+        schema:
+          type: string
+          x-spec-enum-id: ed8044b9f2f01d59
+          enum:
+          - Contract
+          - Full Time
+          - Internship
+          - Part Time
+          - Voluntary
+        description: |-
+          Job Type
+
+          * `Full Time` - Full Time
+          * `Part Time` - Part Time
+          * `Contract` - Contract
+          * `Internship` - Internship
+          * `Voluntary` - Voluntary
+      - in: query
+        name: job_title
+        schema:
+          type: string
+        description: Job Title
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: query
+        name: salary_max
+        schema:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,15}(?:\.\d{0,2})?$
+          nullable: true
+      - in: query
+        name: salary_min
+        schema:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,15}(?:\.\d{0,2})?$
+          nullable: true
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: tags__name
+        schema:
+          type: string
+        description: Tag
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+          description: ''
+    post:
+      operationId: v1_job_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Job'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Job'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Job'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+          description: ''
+  /api/v1/job/{slug}/:
+    get:
+      operationId: v1_job_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+          description: ''
+    put:
+      operationId: v1_job_update
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Job'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Job'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Job'
+        required: true
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+          description: ''
+    patch:
+      operationId: v1_job_partial_update
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedJob'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedJob'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedJob'
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+          description: ''
+    delete:
+      operationId: v1_job_destroy
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/job/approve/{slug}/:
+    post:
+      operationId: v1_job_approve_create
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobApprove'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobApprove'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobApprove'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobApprove'
+          description: ''
+  /api/v1/job/job-list/:
+    get:
+      operationId: v1_job_job_list_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+          description: ''
   /api/v1/knowledge-base/api/uploads/:
     get:
-      operationId: api_v1_knowledge_base_api_uploads_list
+      operationId: v1_knowledge_base_api_uploads_list
       tags:
-      - api
+      - v1
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -632,9 +819,9 @@ paths:
                   $ref: '#/components/schemas/UserUpload'
           description: ''
     post:
-      operationId: api_v1_knowledge_base_api_uploads_create
+      operationId: v1_knowledge_base_api_uploads_create
       tags:
-      - api
+      - v1
       requestBody:
         content:
           application/json:
@@ -659,7 +846,7 @@ paths:
           description: ''
   /api/v1/knowledge-base/api/uploads/{id}/:
     get:
-      operationId: api_v1_knowledge_base_api_uploads_retrieve
+      operationId: v1_knowledge_base_api_uploads_retrieve
       parameters:
       - in: path
         name: id
@@ -667,7 +854,7 @@ paths:
           type: integer
         required: true
       tags:
-      - api
+      - v1
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -679,7 +866,7 @@ paths:
                 $ref: '#/components/schemas/UserUpload'
           description: ''
     put:
-      operationId: api_v1_knowledge_base_api_uploads_update
+      operationId: v1_knowledge_base_api_uploads_update
       parameters:
       - in: path
         name: id
@@ -687,7 +874,7 @@ paths:
           type: integer
         required: true
       tags:
-      - api
+      - v1
       requestBody:
         content:
           application/json:
@@ -711,7 +898,7 @@ paths:
                 $ref: '#/components/schemas/UserUpload'
           description: ''
     patch:
-      operationId: api_v1_knowledge_base_api_uploads_partial_update
+      operationId: v1_knowledge_base_api_uploads_partial_update
       parameters:
       - in: path
         name: id
@@ -719,7 +906,7 @@ paths:
           type: integer
         required: true
       tags:
-      - api
+      - v1
       requestBody:
         content:
           application/json:
@@ -742,7 +929,7 @@ paths:
                 $ref: '#/components/schemas/UserUpload'
           description: ''
     delete:
-      operationId: api_v1_knowledge_base_api_uploads_destroy
+      operationId: v1_knowledge_base_api_uploads_destroy
       parameters:
       - in: path
         name: id
@@ -750,7 +937,7 @@ paths:
           type: integer
         required: true
       tags:
-      - api
+      - v1
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -759,7 +946,7 @@ paths:
           description: No response body
   /api/v1/knowledge-base/api/uploads/{id}/status/:
     patch:
-      operationId: api_v1_knowledge_base_api_uploads_status_partial_update
+      operationId: v1_knowledge_base_api_uploads_status_partial_update
       parameters:
       - in: path
         name: id
@@ -767,7 +954,7 @@ paths:
           type: integer
         required: true
       tags:
-      - api
+      - v1
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -776,9 +963,9 @@ paths:
           description: No response body
   /api/v1/knowledge-base/api/uploads/mine/:
     get:
-      operationId: api_v1_knowledge_base_api_uploads_mine_list
+      operationId: v1_knowledge_base_api_uploads_mine_list
       tags:
-      - api
+      - v1
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -793,9 +980,9 @@ paths:
           description: ''
   /api/v1/knowledge-base/api/uploads/published/:
     get:
-      operationId: api_v1_knowledge_base_api_uploads_published_list
+      operationId: v1_knowledge_base_api_uploads_published_list
       tags:
-      - api
+      - v1
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -808,28 +995,127 @@ paths:
                 items:
                   $ref: '#/components/schemas/UserUpload'
           description: ''
-  /job/approve/{slug}/:
+  /api/v1/login/:
     post:
-      operationId: job_approve_create
-      parameters:
-      - in: path
-        name: slug
-        schema:
-          type: string
-        required: true
+      operationId: v1_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
       tags:
-      - job
+      - v1
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/JobApprove'
+              $ref: '#/components/schemas/TokenObtainPair'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/JobApprove'
+              $ref: '#/components/schemas/TokenObtainPair'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/JobApprove'
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/v1/posts/:
+    get:
+      operationId: v1_posts_list
+      description: List all posts (public) or create a new post (authenticated only).
+      tags:
+      - Community
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+          description: ''
+    post:
+      operationId: v1_posts_create
+      description: List all posts (public) or create a new post (authenticated only).
+      tags:
+      - Community
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostCreate'
+          description: ''
+  /api/v1/posts/{id}/:
+    get:
+      operationId: v1_posts_retrieve
+      description: |-
+        Retrieve a post with its comments (public).
+        Update or delete a post (owner only).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Community
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: ''
+    put:
+      operationId: v1_posts_update
+      description: |-
+        Retrieve a post with its comments (public).
+        Update or delete a post (owner only).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Community
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
         required: true
       security:
       - cookieAuth: []
@@ -839,44 +1125,272 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JobApprove'
+                $ref: '#/components/schemas/PostCreate'
+          description: ''
+    patch:
+      operationId: v1_posts_partial_update
+      description: |-
+        Retrieve a post with its comments (public).
+        Update or delete a post (owner only).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Community
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPostCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPostCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPostCreate'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostCreate'
+          description: ''
+    delete:
+      operationId: v1_posts_destroy
+      description: |-
+        Retrieve a post with its comments (public).
+        Update or delete a post (owner only).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Community
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/posts/{id}/comment/:
+    post:
+      operationId: create_comment
+      description: Add a comment to a post. Authenticated users only.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Community
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Comment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Comment'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+  /api/v1/posts/{id}/comment/{comment_id}/:
+    delete:
+      operationId: delete_comment
+      description: Delete a comment. Comment author or admin only.
+      parameters:
+      - in: path
+        name: comment_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Community
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/posts/{id}/like/:
+    post:
+      operationId: toggle_post_like
+      description: Toggle like/unlike on a post. If already liked, unlikes it; otherwise
+        likes it. Authenticated users only.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Community
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Post'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Post'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  likes_count:
+                    type: integer
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  likes_count:
+                    type: integer
           description: ''
 components:
   schemas:
     Bookmark:
       type: object
       properties:
-        job_title:
-          type: string
+        id:
+          type: integer
           readOnly: true
-        job_company:
+        bookmark:
           type: string
-          readOnly: true
-        job_description:
-          type: string
+          format: uri
           readOnly: true
         job_instance:
           type: string
           format: uri
           readOnly: true
+        folder_instance:
+          type: string
+          format: uri
+          readOnly: true
+        status:
+          enum:
+          - Saved
+          - Applied
+          - Interviewing
+          - Rejected
+          - Offered
+          - Archived
+          type: string
+          description: |-
+            * `Saved` - Saved
+            * `Applied` - Applied
+            * `Interviewing` - Interviewing
+            * `Rejected` - Rejected
+            * `Offered` - Offered
+            * `Archived` - Archived
+          x-spec-enum-id: 036b6b7804d6d87c
         notes:
           type: string
           nullable: true
-      required:
-      - job_company
-      - job_description
-      - job_instance
-      - job_title
-    CreateBookmark:
-      type: object
-      properties:
+        user:
+          type: string
+          readOnly: true
         job:
           type: integer
-        notes:
-          type: string
+        folder:
+          type: integer
           nullable: true
       required:
+      - bookmark
+      - folder_instance
+      - id
       - job
+      - job_instance
+      - user
+    BookmarkFolder:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        folder_instance:
+          type: string
+          format: uri
+          readOnly: true
+        folder_name:
+          type: string
+          maxLength: 255
+        folder_description:
+          type: string
+          nullable: true
+        user:
+          type: string
+          readOnly: true
+      required:
+      - folder_instance
+      - folder_name
+      - id
+      - user
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        author:
+          type: string
+          readOnly: true
+        author_email:
+          type: string
+          readOnly: true
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - author_email
+      - content
+      - created_at
+      - id
     EmailVerifyBegin:
       type: object
       properties:
@@ -893,38 +1407,30 @@ components:
     EmailVerifyComplete:
       type: object
       properties:
-        id:
-          type: string
-          readOnly: true
         email:
           type: string
           format: email
+          writeOnly: true
+        otp_code:
+          type: string
+          writeOnly: true
+        id:
+          type: string
           readOnly: true
-        is_email_verified:
-          type: boolean
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
           readOnly: true
         message:
           type: string
           readOnly: true
       required:
-      - email
+      - access
       - id
-      - is_email_verified
       - message
-    EmploymentTypeEnum:
-      enum:
-      - Full Time
-      - Part Time
-      - Contract
-      - Internship
-      - Voluntary
-      type: string
-      description: |-
-        * `Full Time` - Full Time
-        * `Part Time` - Part Time
-        * `Contract` - Contract
-        * `Internship` - Internship
-        * `Voluntary` - Voluntary
+      - refresh
     Job:
       type: object
       properties:
@@ -935,29 +1441,68 @@ components:
           type: string
           format: uri
           readOnly: true
-        skills:
+        job_skills:
           type: array
           items:
-            $ref: '#/components/schemas/Skill'
+            $ref: '#/components/schemas/JobSkill'
         tags:
           type: array
           items:
-            $ref: '#/components/schemas/Tag'
+            type: string
+          readOnly: true
         employment_type:
-          $ref: '#/components/schemas/EmploymentTypeEnum'
+          enum:
+          - Full Time
+          - Part Time
+          - Contract
+          - Internship
+          - Voluntary
+          type: string
+          description: |-
+            * `Full Time` - Full Time
+            * `Part Time` - Part Time
+            * `Contract` - Contract
+            * `Internship` - Internship
+            * `Voluntary` - Voluntary
+          x-spec-enum-id: ed8044b9f2f01d59
         company_name:
           type: string
+        original_job:
+          type: string
+          format: uri
+          readOnly: true
         job_title:
           type: string
           maxLength: 255
         job_description:
           type: string
         status:
-          allOf:
-          - $ref: '#/components/schemas/JobStatusEnum'
+          enum:
+          - Draft
+          - Published
+          - Archived
+          - Expired
+          type: string
+          description: |-
+            * `Draft` - Draft
+            * `Published` - Published
+            * `Archived` - Archived
+            * `Expired` - Expired
+          x-spec-enum-id: 0e17889d5f11ba40
           readOnly: true
         visibility:
-          $ref: '#/components/schemas/VisibilityEnum'
+          enum:
+          - Private
+          - Internal
+          - Public
+          - Featured
+          type: string
+          description: |-
+            * `Private` - Private
+            * `Internal` - Internal
+            * `Public` - Public
+            * `Featured` - Featured
+          x-spec-enum-id: 93fe0522825b4fec
         published_at:
           type: string
           format: date-time
@@ -994,10 +1539,11 @@ components:
         posted_by:
           type: string
           readOnly: true
-        original_job:
-          type: integer
+        skills:
+          type: array
+          items:
+            type: string
           readOnly: true
-          nullable: true
       required:
       - applications_count
       - created_at
@@ -1006,6 +1552,7 @@ components:
       - is_approved
       - job
       - job_description
+      - job_skills
       - job_title
       - original_job
       - posted_by
@@ -1024,25 +1571,27 @@ components:
           type: string
       required:
       - is_approved
-    JobStatusEnum:
-      enum:
-      - Draft
-      - Published
-      - Archived
-      - Expired
-      type: string
-      description: |-
-        * `Draft` - Draft
-        * `Published` - Published
-        * `Archived` - Archived
-        * `Expired` - Expired
+    JobSkill:
+      type: object
+      properties:
+        skill:
+          $ref: '#/components/schemas/Skill'
+        skill_level:
+          type: string
+      required:
+      - skill
+      - skill_level
     Login:
       type: object
+      description: |-
+        Step 1 of login — always requires email + password.
+        If the user has 2FA enabled, returns a flag telling the frontend
+        to prompt for the TOTP code next. Otherwise issues tokens immediately.
       properties:
         email:
           type: string
           format: email
-        otp_code:
+        password:
           type: string
           writeOnly: true
         id:
@@ -1054,31 +1603,81 @@ components:
         refresh:
           type: string
           readOnly: true
+        requires_2fa:
+          type: boolean
+          readOnly: true
       required:
       - access
       - email
       - id
-      - otp_code
+      - password
       - refresh
+      - requires_2fa
     PatchedBookmark:
       type: object
       properties:
-        job_title:
-          type: string
+        id:
+          type: integer
           readOnly: true
-        job_company:
+        bookmark:
           type: string
-          readOnly: true
-        job_description:
-          type: string
+          format: uri
           readOnly: true
         job_instance:
           type: string
           format: uri
           readOnly: true
+        folder_instance:
+          type: string
+          format: uri
+          readOnly: true
+        status:
+          enum:
+          - Saved
+          - Applied
+          - Interviewing
+          - Rejected
+          - Offered
+          - Archived
+          type: string
+          description: |-
+            * `Saved` - Saved
+            * `Applied` - Applied
+            * `Interviewing` - Interviewing
+            * `Rejected` - Rejected
+            * `Offered` - Offered
+            * `Archived` - Archived
+          x-spec-enum-id: 036b6b7804d6d87c
         notes:
           type: string
           nullable: true
+        user:
+          type: string
+          readOnly: true
+        job:
+          type: integer
+        folder:
+          type: integer
+          nullable: true
+    PatchedBookmarkFolder:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        folder_instance:
+          type: string
+          format: uri
+          readOnly: true
+        folder_name:
+          type: string
+          maxLength: 255
+        folder_description:
+          type: string
+          nullable: true
+        user:
+          type: string
+          readOnly: true
     PatchedJob:
       type: object
       properties:
@@ -1089,29 +1688,68 @@ components:
           type: string
           format: uri
           readOnly: true
-        skills:
+        job_skills:
           type: array
           items:
-            $ref: '#/components/schemas/Skill'
+            $ref: '#/components/schemas/JobSkill'
         tags:
           type: array
           items:
-            $ref: '#/components/schemas/Tag'
+            type: string
+          readOnly: true
         employment_type:
-          $ref: '#/components/schemas/EmploymentTypeEnum'
+          enum:
+          - Full Time
+          - Part Time
+          - Contract
+          - Internship
+          - Voluntary
+          type: string
+          description: |-
+            * `Full Time` - Full Time
+            * `Part Time` - Part Time
+            * `Contract` - Contract
+            * `Internship` - Internship
+            * `Voluntary` - Voluntary
+          x-spec-enum-id: ed8044b9f2f01d59
         company_name:
           type: string
+        original_job:
+          type: string
+          format: uri
+          readOnly: true
         job_title:
           type: string
           maxLength: 255
         job_description:
           type: string
         status:
-          allOf:
-          - $ref: '#/components/schemas/JobStatusEnum'
+          enum:
+          - Draft
+          - Published
+          - Archived
+          - Expired
+          type: string
+          description: |-
+            * `Draft` - Draft
+            * `Published` - Published
+            * `Archived` - Archived
+            * `Expired` - Expired
+          x-spec-enum-id: 0e17889d5f11ba40
           readOnly: true
         visibility:
-          $ref: '#/components/schemas/VisibilityEnum'
+          enum:
+          - Private
+          - Internal
+          - Public
+          - Featured
+          type: string
+          description: |-
+            * `Private` - Private
+            * `Internal` - Internal
+            * `Public` - Public
+            * `Featured` - Featured
+          x-spec-enum-id: 93fe0522825b4fec
         published_at:
           type: string
           format: date-time
@@ -1148,10 +1786,34 @@ components:
         posted_by:
           type: string
           readOnly: true
-        original_job:
+        skills:
+          type: array
+          items:
+            type: string
+          readOnly: true
+    PatchedPostCreate:
+      type: object
+      description: Serializer for creating and updating posts.
+      properties:
+        id:
           type: integer
           readOnly: true
-          nullable: true
+        title:
+          type: string
+          maxLength: 255
+        content:
+          type: string
+        tags:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
     PatchedUserUpload:
       type: object
       properties:
@@ -1159,7 +1821,16 @@ components:
           type: integer
           readOnly: true
         upload_type:
-          $ref: '#/components/schemas/UploadTypeEnum'
+          enum:
+          - PDF
+          - EBOOK
+          - IMAGE
+          type: string
+          description: |-
+            * `PDF` - PDF Document
+            * `EBOOK` - Ebook
+            * `IMAGE` - image
+          x-spec-enum-id: 7ac8ed7969452fb0
         file:
           type: string
           format: uri
@@ -1175,23 +1846,108 @@ components:
           format: date-time
           readOnly: true
         status:
-          allOf:
-          - $ref: '#/components/schemas/UserUploadStatusEnum'
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          type: string
+          description: |-
+            * `PENDING` - Pending
+            * `APPROVED` - Approved
+            * `REJECTED` - Rejected
+          x-spec-enum-id: 1f00471a47c591be
           readOnly: true
         tags:
           type: string
           readOnly: true
+    Post:
+      type: object
+      description: Serializer for listing and retrieving posts with nested comments.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        author:
+          type: string
+          readOnly: true
+        author_email:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        content:
+          type: string
+        tags:
+          type: string
+          maxLength: 255
+        likes_count:
+          type: integer
+          readOnly: true
+        is_liked:
+          type: boolean
+          readOnly: true
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - author_email
+      - comments
+      - content
+      - created_at
+      - id
+      - is_liked
+      - likes_count
+      - title
+      - updated_at
+    PostCreate:
+      type: object
+      description: Serializer for creating and updating posts.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        content:
+          type: string
+        tags:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - content
+      - created_at
+      - id
+      - title
+      - updated_at
     QRCodeData:
       type: object
+      description: Returns the otpauth:// URL used to generate the QR code.
       properties:
         otpauth_url:
           type: string
           readOnly: true
-        email:
-          type: string
-          format: email
       required:
-      - email
       - otpauth_url
     Register:
       type: object
@@ -1202,6 +1958,10 @@ components:
         email:
           type: string
           format: email
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
         is_email_verified:
           type: boolean
           readOnly: true
@@ -1213,19 +1973,18 @@ components:
       - id
       - is_email_verified
       - message
+      - password
     Skill:
       type: object
       properties:
-        id:
-          type: integer
-          readOnly: true
         name:
           type: string
       required:
-      - id
       - name
     TOTPDeviceCreate:
       type: object
+      description: Called when an already-logged-in user chooses to enable 2FA from
+        settings.
       properties:
         user:
           type: string
@@ -1233,39 +1992,34 @@ components:
         name:
           type: string
           readOnly: true
-        email:
-          type: string
-          format: email
         confirmed:
           type: boolean
           readOnly: true
           default: false
       required:
       - confirmed
-      - email
       - name
       - user
-    Tag:
+    TokenObtainPair:
       type: object
       properties:
-        id:
-          type: integer
-          readOnly: true
-        name:
+        email:
           type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
       required:
-      - id
-      - name
-    UploadTypeEnum:
-      enum:
-      - PDF
-      - EBOOK
-      - IMAGE
-      type: string
-      description: |-
-        * `PDF` - PDF Document
-        * `EBOOK` - Ebook
-        * `IMAGE` - image
+      - access
+      - email
+      - password
+      - refresh
     UserUpload:
       type: object
       properties:
@@ -1273,7 +2027,16 @@ components:
           type: integer
           readOnly: true
         upload_type:
-          $ref: '#/components/schemas/UploadTypeEnum'
+          enum:
+          - PDF
+          - EBOOK
+          - IMAGE
+          type: string
+          description: |-
+            * `PDF` - PDF Document
+            * `EBOOK` - Ebook
+            * `IMAGE` - image
+          x-spec-enum-id: 7ac8ed7969452fb0
         file:
           type: string
           format: uri
@@ -1289,8 +2052,16 @@ components:
           format: date-time
           readOnly: true
         status:
-          allOf:
-          - $ref: '#/components/schemas/UserUploadStatusEnum'
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          type: string
+          description: |-
+            * `PENDING` - Pending
+            * `APPROVED` - Approved
+            * `REJECTED` - Rejected
+          x-spec-enum-id: 1f00471a47c591be
           readOnly: true
         tags:
           type: string
@@ -1303,31 +2074,14 @@ components:
       - status
       - tags
       - upload_type
-    UserUploadStatusEnum:
-      enum:
-      - PENDING
-      - APPROVED
-      - REJECTED
-      type: string
-      description: |-
-        * `PENDING` - Pending
-        * `APPROVED` - Approved
-        * `REJECTED` - Rejected
     VerifyTOTPDevice:
       type: object
+      description: Confirms the TOTP device after the user scans the QR code and enters
+        their first code.
       properties:
-        email:
-          type: string
-          format: email
         otp_token:
           type: string
           writeOnly: true
-        user:
-          type: string
-          readOnly: true
-        name:
-          type: string
-          readOnly: true
         confirmed:
           type: boolean
           readOnly: true
@@ -1336,23 +2090,8 @@ components:
           readOnly: true
       required:
       - confirmed
-      - email
       - message
-      - name
       - otp_token
-      - user
-    VisibilityEnum:
-      enum:
-      - Private
-      - Internal
-      - Public
-      - Featured
-      type: string
-      description: |-
-        * `Private` - Private
-        * `Internal` - Internal
-        * `Public` - Public
-        * `Featured` - Featured
   securitySchemes:
     basicAuth:
       type: http

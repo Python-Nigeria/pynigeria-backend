@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_totp",
     "django_filters",
     "apps.authentication",
+    "apps.community",
     "apps.job_listing_api",
     "apps.knowledge_base_api",
     "apps.tracking",
@@ -153,6 +154,9 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
+    "POSTPROCESSING_HOOKS": ["config.spectacular_hooks.modify_community_tags"],
+    "ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE": False,
+    "SCHEMA_MOUNT_PATH": "/api/schema/",
 }
 
 # Email settings
