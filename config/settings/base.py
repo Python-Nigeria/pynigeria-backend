@@ -154,6 +154,9 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
+    "POSTPROCESSING_HOOKS": ["config.spectacular_hooks.modify_community_tags"],
+    "ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE": False,
+    "SCHEMA_MOUNT_PATH": "/api/schema/",
 }
 
 # Email settings

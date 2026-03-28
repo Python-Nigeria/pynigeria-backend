@@ -2,88 +2,12 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from .models import Post, Comment, Like
 from .serializers import PostSerializer, PostCreateSerializer, CommentSerializer
 from .permissions import IsOwnerOrReadOnly
 
-
-class PostListCreateView(generics.ListCreateAPIView):
-    """
-    List all posts (public) or create a new post (authenticated only).
-    """
-    queryset = Post.objects.all()
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return PostCreateSerializer
-        return PostSerializer
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        return context
-
-    @extend_schema(
-        tags=['Community'],
-        operation_id='list_posts',
-        description='List all community posts. Public endpoint.'
-    )
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
-    @extend_schema(
-        tags=['Community'],
-        operation_id='create_post',
-        description='Create a new community post. Authenticated users only.'
-    )
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
-
-class PostRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve a post with its comments (public).
-    Update or delete a post (owner only).
-    """
-    queryset = Post.objects.all()
-    permission_classes = [IsOwnerOrReadOnly]
-
-    def get_serializer_class(self):
-        if self.request.method in ('PUT', 'PATCH'):
-            return PostCreateSerializer
-        return PostSerializer
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        return context
-
-    @extend_schema(
-        tags=['Community'],
-        operation_id='retrieve_post',
-        description='Retrieve a single post with its comments. Public endpoint.'
-    )
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
-
-    @extend_schema(
-        tags=['Community'],
-        operation_id='update_post',
-        description='Update a post. Post owner only.'
-    )
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
-
-    @extend_schema(
-        tags=['Community'],
-        operation_id='destroy_post',
-        description='Delete a post. Post owner or admin only.'
-    )
-    def destroy(self, request, *args, **kwargs):
-        return super().destroy(request, *args, **kwargs)
 
 
 class CommentCreateView(generics.CreateAPIView):
@@ -107,6 +31,77 @@ class CommentCreateView(generics.CreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=['Community'],
+        operation_id='list_posts',
+        description='List all community posts. Public endpoint.'
+    ),
+    create=extend_schema(
+        tags=['Community'],
+        operation_id='create_post',
+        description='Create a new community post. Authenticated users only.'
+    ),
+)
+class PostListCreateView(generics.ListCreateAPIView):
+    """
+    List all posts (public) or create a new post (authenticated only).
+    """
+    queryset = Post.objects.all()
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return PostCreateSerializer
+        return PostSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+
+@extend_schema_view(
+    retrieve=extend_schema(
+        tags=['Community'],
+        operation_id='retrieve_post',
+        description='Retrieve a single post with its comments. Public endpoint.'
+    ),
+    update=extend_schema(
+        tags=['Community'],
+        operation_id='update_post',
+        description='Update a post. Post owner only.'
+    ),
+    partial_update=extend_schema(
+        tags=['Community'],
+        operation_id='partial_update_post',
+        description='Partially update a post. Post owner only.'
+    ),
+    destroy=extend_schema(
+        tags=['Community'],
+        operation_id='destroy_post',
+        description='Delete a post. Post owner or admin only.'
+    ),
+)
+class PostRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieving a post with its comments is public.
+    Update or delete a post (owner only).
+    """
+    queryset = Post.objects.all()
+    permission_classes = [IsOwnerOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.request.method in ('PUT', 'PATCH'):
+            return PostCreateSerializer
+        return PostSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
 
 class CommentDeleteView(generics.DestroyAPIView):
@@ -135,17 +130,23 @@ class CommentDeleteView(generics.DestroyAPIView):
         return super().delete(request, *args, **kwargs)
 
 
-class LikeToggleView(APIView):
+class LikeToggleView(generics.GenericAPIView):
     """
-    Toggle like/unlike on a post (authenticated only).
+    Toggle like/unlike on a post.
     If user already liked, unlike it. If not, like it.
     """
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
         tags=['Community'],
         operation_id='toggle_post_like',
-        description='Toggle like/unlike on a post. If already liked, unlikes it; otherwise likes it. Authenticated users only.'
+        description='Toggle like/unlike on a post. If already liked, unlikes it; otherwise likes it. Authenticated users only.',
+        responses={
+            200: {'type': 'object', 'properties': {'status': {'type': 'string'}, 'likes_count': {'type': 'integer'}}},
+            201: {'type': 'object', 'properties': {'status': {'type': 'string'}, 'likes_count': {'type': 'integer'}}},
+        }
     )
     def post(self, request, pk):
         post = get_object_or_404(Post, pk=pk)
