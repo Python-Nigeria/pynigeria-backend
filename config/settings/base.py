@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_totp",
     "django_filters",
     "apps.authentication",
+    "apps.community",
     "apps.job_listing_api",
     "apps.knowledge_base_api",
     "apps.tracking",
