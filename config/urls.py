@@ -28,10 +28,12 @@ from drf_spectacular.views import (
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/", include("apps.job_listing_api.urls")),
+    path("api/v1/events/", include("apps.events.urls")),
     path(
         "api/v1/authentication/",
         include("apps.authentication.urls", namespace="authentication_v1"),
     ),
+    path('api/v1/users/', include('apps.users.urls')),
     path("api/v1/posts/", include("apps.community.urls")),
     # path("api/v1/jobs/", include("job_listing_api.urls", namespace="job_posting_v1")),
     path(

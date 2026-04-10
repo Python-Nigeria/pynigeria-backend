@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     "django_filters",
     "apps.authentication",
     "apps.community",
+    "apps.events",
+    "apps.users",
     "apps.job_listing_api",
     "apps.knowledge_base_api",
     "apps.tracking",
