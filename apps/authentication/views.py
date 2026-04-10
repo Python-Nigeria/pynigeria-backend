@@ -15,6 +15,7 @@ from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 from social_core.actions import do_auth
 from social_django.utils import psa
+from urllib.parse import unquote
 
 from .serializers import (
     EmailVerifyBeginSerializer,
@@ -76,6 +77,7 @@ class VerifyEmailCompleteView(APIView):
     @extend_schema(operation_id="v1_verify_email_complete", tags=["auth_v1"])
     def post(self, request):
         token = request.query_params.get("token")
+        token = unquote(token)
         serializer = self.serializer_class(data=request.data, context={"token": token})
         if serializer.is_valid(raise_exception=True):
             result = serializer.save()

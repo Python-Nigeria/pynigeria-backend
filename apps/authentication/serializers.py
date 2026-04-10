@@ -67,7 +67,7 @@ class RegisterSerializer(Serializer):
     def validate(self, data):
         if User.objects.filter(email=data.get("email")).exists():
             raise ValidationError(
-                detail={"error": "An account with this email already exists."}
+                detail={"error": "An account with this email already exists.","duplicate":True}
             )
         return data
 
@@ -161,6 +161,7 @@ class EmailVerifyCompleteSerializer(Serializer):
                 detail={"error": "Either token or email and otp_code must be provided."}
             )
 
+
         if not getattr(self, "otp", None):
             raise ValidationError(detail={"error": "Invalid OTP. Please try again."})
 
@@ -171,7 +172,8 @@ class EmailVerifyCompleteSerializer(Serializer):
                 detail={"error": "OTP has already been used. Please request a new one."}
             )
 
-        if self.otp.is_expired():
+        if self.otp.is_expired(signup=True):
+            print("this otp has expired")
             raise ValidationError(
                 detail={"error": "OTP has expired. Please request a new one."}
             )

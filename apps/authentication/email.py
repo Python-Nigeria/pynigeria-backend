@@ -29,7 +29,7 @@ class EmailOTP:
 
         # This should point to your frontend verify page, not the API endpoint
         origin = settings.CURRENT_ORIGIN.rstrip("/")
-        self.verification_url = f"{origin}/account/verify/{self.signed_token}"
+        self.verification_url = f"{origin}/verify-email/{self.signed_token}"
 
         if self.context == "login":
             self.subject = "Your Python 9ja login code"

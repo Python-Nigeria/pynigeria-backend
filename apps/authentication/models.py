@@ -125,8 +125,12 @@ class OTPVerification(Model):
         db_table = "user_otp_verification"
         ordering = ["-created_at"]
 
-    def is_expired(self):
-        expiry = self.created_at + timezone.timedelta(minutes=10)
+    def is_expired(self,signup=False):
+        if signup: #otp should expired in 24hrs if it is signup
+            expiry_time = timezone.timedelta(hours=24)
+        else:
+            expiry_time = timezone.timedelta(minutes=10) #otp should expired in 10minutes if it is login
+        expiry = self.created_at + expiry_time
         return timezone.now() > expiry
 
     def __str__(self):

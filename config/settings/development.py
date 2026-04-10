@@ -33,7 +33,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-CURRENT_ORIGIN = "https://pynigeria.vercel.app/"
+CURRENT_ORIGIN = "http://localhost:3000"
 
 
 # CORS_ALLOW_ALL_ORIGINS = True

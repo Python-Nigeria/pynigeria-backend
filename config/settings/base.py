@@ -7,6 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env_file = BASE_DIR / ".env"
 
+
 if env_file.exists():
     load_dotenv(env_file, override=True)
 else:
