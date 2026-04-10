@@ -128,9 +128,12 @@ class EmailVerifyCompleteSerializer(Serializer):
     message = CharField(read_only=True)
 
     def validate(self, data):
+        print("prepare to get context")
         token = self.context.get("token")
         email = data.get("email")
         otp_code = data.get("otp_code")
+        print("codes are")
+        print(otp_code,email)
 
         if token:
             try:

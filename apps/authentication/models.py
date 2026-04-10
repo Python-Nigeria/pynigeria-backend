@@ -129,7 +129,7 @@ class OTPVerification(Model):
         if signup: #otp should expired in 24hrs if it is signup
             expiry_time = timezone.timedelta(hours=24)
         else:
-            expiry_time = timezone.timedelta(minutes=10) #otp should expired in 10minutes if it is login
+            expiry_time = timezone.timedelta(minutes=30) #otp should expired in 30minutes if it is login
         expiry = self.created_at + expiry_time
         return timezone.now() > expiry
 

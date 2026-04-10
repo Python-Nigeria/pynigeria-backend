@@ -77,7 +77,8 @@ class VerifyEmailCompleteView(APIView):
     @extend_schema(operation_id="v1_verify_email_complete", tags=["auth_v1"])
     def post(self, request):
         token = request.query_params.get("token")
-        token = unquote(token)
+        if token:
+            token = unquote(token)
         serializer = self.serializer_class(data=request.data, context={"token": token})
         if serializer.is_valid(raise_exception=True):
             result = serializer.save()
