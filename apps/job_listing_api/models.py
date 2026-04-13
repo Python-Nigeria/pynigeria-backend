@@ -1,10 +1,10 @@
-from django.conf import settings
 from django.db import models
 from taggit.managers import TaggableManager
 import hashlib
 import uuid
-# Create your models here.
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class JobTypeChoice(models.TextChoices):
     FULL_TIME = "Full Time"
@@ -94,7 +94,7 @@ class Job(models.Model):
     salary = models.DecimalField(max_digits=17, decimal_places=2, null=True)
 
     # Tracking and metrics
-    posted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    posted_by = models.ForeignKey(User, on_delete=models.CASCADE)
     views_count = models.PositiveIntegerField(default=0)
     applications_count = models.PositiveIntegerField(default=0)
 
@@ -161,7 +161,7 @@ class BookmarkFolder(models.Model):
     folder_name = models.CharField(max_length=255)
     folder_description = models.TextField(null=True, blank=True)
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        User,
         on_delete=models.CASCADE,
         related_name="bookmark_folders",
     )
@@ -178,7 +178,7 @@ class BookmarkFolder(models.Model):
 
 class Bookmark(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="job_bookmarks"
+        User, on_delete=models.CASCADE, related_name="job_bookmarks"
     )
     job = models.ForeignKey(
         Job,

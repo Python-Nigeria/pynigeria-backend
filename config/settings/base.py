@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    
     # Third-Party packages
     "corsheaders",
     "rest_framework",
@@ -48,14 +49,16 @@ INSTALLED_APPS = [
     "django_otp",  # for 2FA
     "django_otp.plugins.otp_totp",
     "django_filters",
+
+    #apps
     "apps.authentication",
     "apps.users",
     "apps.community",
     "apps.events",
-    "apps.users",
     "apps.job_listing_api",
     "apps.knowledge_base_api",
     "apps.tracking",
+    
     # For social auth
     "oauth2_provider",
     "social_django",

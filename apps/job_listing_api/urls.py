@@ -1,14 +1,14 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-
 from rest_framework_simplejwt.views import TokenObtainPairView
-
 from .views import (
     BookmarkFolderViewset,
     BookmarkViewset,
     JobApproveView,
     JobViewset,
 )
+
+app_name = "job_posting_v1"
 
 router = DefaultRouter()
 
