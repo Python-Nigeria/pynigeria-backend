@@ -79,6 +79,7 @@ class VerifyEmailCompleteView(APIView):
         token = request.query_params.get("token")
         if token:
             token = unquote(token)
+        print(request.data)
         serializer = self.serializer_class(data=request.data, context={"token": token})
         if serializer.is_valid(raise_exception=True):
             result = serializer.save()

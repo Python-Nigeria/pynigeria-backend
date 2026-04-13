@@ -128,12 +128,9 @@ class EmailVerifyCompleteSerializer(Serializer):
     message = CharField(read_only=True)
 
     def validate(self, data):
-        print("prepare to get context")
         token = self.context.get("token")
         email = data.get("email")
         otp_code = data.get("otp_code")
-        print("codes are")
-        print(otp_code,email)
 
         if token:
             try:
@@ -164,19 +161,17 @@ class EmailVerifyCompleteSerializer(Serializer):
                 detail={"error": "Either token or email and otp_code must be provided."}
             )
 
-
         if not getattr(self, "otp", None):
             raise ValidationError(detail={"error": "Invalid OTP. Please try again."})
 
         self.user = self.otp.user
-
+    
         if self.otp.is_used:
             raise ValidationError(
                 detail={"error": "OTP has already been used. Please request a new one."}
             )
 
         if self.otp.is_expired(signup=True):
-            print("this otp has expired")
             raise ValidationError(
                 detail={"error": "OTP has expired. Please request a new one."}
             )
@@ -192,9 +187,8 @@ class EmailVerifyCompleteSerializer(Serializer):
             self.otp.save()
 
         refresh_token = RefreshToken.for_user(self.user)
+        print("save done")
         return {
-            "id": self.user.id,
-            "email": self.user.email,
             "access": str(refresh_token.access_token),
             "refresh": str(refresh_token),
             "message": (
@@ -202,7 +196,12 @@ class EmailVerifyCompleteSerializer(Serializer):
                 if is_newly_verified
                 else "Login successful."
             ),
-        }
+            "user": {
+                "id": str(self.user.id),
+                "email": self.user.email,
+                # add any other fields your frontend needs
+            }
+            }
 
     def to_representation(self, instance):
         return instance

@@ -27,8 +27,8 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/v1/", include("apps.job_listing_api.urls")),
     path("api/v1/events/", include("apps.events.urls")),
+    path("api/v1/job/", include("apps.job_listing_api.urls")),
     path(
         "api/v1/authentication/",
         include("apps.authentication.urls", namespace="authentication_v1"),
@@ -38,8 +38,11 @@ urlpatterns = [
     # path("api/v1/jobs/", include("job_listing_api.urls", namespace="job_posting_v1")),
     path(
         "api/v1/knowledge-base/",
-        include("apps.knowledge_base_api.urls", namespace="knowledge_base_api_v1"),
+        include("apps.knowledge_base_api.urls", namespace="knowledge_base_api_v1")
     ),
+    path(
+        "api/v1/user/",include("apps.users.urls",namespace="users_v1")
+        ),
     # Schema and documentation below
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

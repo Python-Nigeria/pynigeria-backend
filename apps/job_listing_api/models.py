@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.db import models
 from taggit.managers import TaggableManager
-
+import hashlib
+import uuid
 # Create your models here.
 
 
@@ -109,7 +110,7 @@ class Job(models.Model):
     version = models.IntegerField(default=1)
     # existing fields
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    slug = models.UUIDField(unique=True, db_index=True)
+    slug = models.UUIDField(unique=True, db_index=True,blank=True)
 
     is_approved = models.BooleanField(default=False)
 
@@ -117,6 +118,17 @@ class Job(models.Model):
         return f"{self.job_title} at {self.company_name}"
 
     def save(self, *args, **kwargs):
+        if not self.slug:
+            initial_uuid = uuid.uuid4()
+
+            # Convert UUID to bytes and hash it
+            hash_obj = hashlib.sha256(str(initial_uuid).encode())
+            hash_bytes = hash_obj.digest()
+            new_uuid = uuid.UUID(bytes=hash_bytes[:16], version=4)
+            self.slug = new_uuid
+
+            # Use the first 16 bytes of the hash to create a new UUID (version 3)
+            new_uuid = uuid.UUID(bytes=hash_bytes[:16], version=4)
         if self.company_name:
             self.company_name = self.company_name.strip().lower()
         super().save(*args, **kwargs)

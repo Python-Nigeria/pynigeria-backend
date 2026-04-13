@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_totp",
     "django_filters",
     "apps.authentication",
+    "apps.users",
     "apps.community",
     "apps.events",
     "apps.users",
