@@ -50,19 +50,20 @@ class JobSkillSerializer(serializers.ModelSerializer):
 
 class JobSerializer(TaggitSerializer, serializers.ModelSerializer, Helper):
     job = serializers.HyperlinkedIdentityField(
-        view_name="job-detail", lookup_field="slug"
+        view_name="job_posting_v1:job-detail", lookup_field="slug",lookup_url_kwarg="slug"
     )
     job_skills = JobSkillSerializer(many=True, required=True)
     tags = TagListSerializerField(read_only=True)
     employment_type = serializers.ChoiceField(choices=JobTypeChoice.choices)
     company_name = serializers.CharField(required=False)
     original_job = serializers.HyperlinkedRelatedField(
-        view_name="job-detail", lookup_field="slug", read_only=True
+        view_name="job_posting_v1:job-detail", lookup_field="slug", read_only=True,lookup_url_kwarg="slug",
     )
 
     class Meta:
         model = Job
-        exclude = ("slug",)
+        # exclude = ("slug",)
+        fields = "__all__"
         read_only_fields = [
             "posted_by",
             "created_at",
@@ -74,6 +75,7 @@ class JobSerializer(TaggitSerializer, serializers.ModelSerializer, Helper):
             "scheduled_publish_at",
             "is_approved",
             "version",
+            "slug",
             # "tags",
         ]
 

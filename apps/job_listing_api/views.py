@@ -47,9 +47,10 @@ class JobViewset(viewsets.ModelViewSet, Helper):
     ordering = ["job_title"]
     filterset_class = JobFilterset
     lookup_field = "slug"
+    lookup_url_kwarg = "slug"
 
-    def list(self, request, *args, **kwargs):
-        raise MethodNotAllowed(method="get")
+    # def list(self, request, *args, **kwargs):
+    #     raise MethodNotAllowed(method="get")
 
     def filter_queryset(self, queryset):
         """
@@ -94,12 +95,12 @@ class JobViewset(viewsets.ModelViewSet, Helper):
 
         return Response(response_data, status=201)
 
-    @action(
-        methods=["get"],
-        detail=False,
-        url_path="job-list",
-        url_name="job-list",
-    )
+    # @action(
+    #     methods=["get"],
+    #     detail=False,
+    #     url_path="job-list",
+    #     url_name="job-list",
+    # )
     def job_list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 

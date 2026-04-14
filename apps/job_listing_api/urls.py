@@ -12,7 +12,7 @@ app_name = "job_posting_v1"
 
 router = DefaultRouter()
 
-router.register(r"job", JobViewset)
+router.register(r"job", JobViewset,basename="job")
 router.register(r"bookmark", BookmarkViewset)
 router.register(r"bookmark-folders", BookmarkFolderViewset)
 
